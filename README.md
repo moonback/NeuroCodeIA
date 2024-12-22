@@ -1,13 +1,13 @@
-# bolt.diy (Previously oTToDev)
-[![bolt.diy: AI-Powered Full-Stack Web Development in the Browser](./public/social_preview_index.jpg)](https://bolt.diy)
+# neurocode.fr (Previously bolt.diy)
+[![neurocode.fr: AI-Powered Full-Stack Web Development in the Browser](./public/social_preview_index.jpg)](https://neurocode.fr)
 
-Welcome to bolt.diy, the official open source version of Bolt.new (previously known as oTToDev and bolt.new ANY LLM), which allows you to choose the LLM that you use for each prompt! Currently, you can use OpenAI, Anthropic, Ollama, OpenRouter, Gemini, LMStudio, Mistral, xAI, HuggingFace, DeepSeek, or Groq models - and it is easily extended to use any other model supported by the Vercel AI SDK! See the instructions below for running this locally and extending it to include more models.
+Welcome to neurocode.fr, the official open source version of Neurocode (previously known as bolt.diy and bolt.new ANY LLM), which allows you to choose the LLM that you use for each prompt! Currently, you can use OpenAI, Anthropic, Ollama, OpenRouter, Gemini, LMStudio, Mistral, xAI, HuggingFace, DeepSeek, or Groq models - and it is easily extended to use any other model supported by the Vercel AI SDK! See the instructions below for running this locally and extending it to include more models.
 
-Check the [bolt.diy Docs](https://stackblitz-labs.github.io/bolt.diy/) for more information. 
+Check the [neurocode.fr Docs](https://stackblitz-labs.github.io/neurocode.fr/) for more information. 
 
-We have also launched an experimental agent called the "bolt.diy Expert" that can answer common questions about bolt.diy. Find it here on the [oTTomator Live Agent Studio](https://studio.ottomator.ai/).
+We have also launched an experimental agent called the "neurocode.fr Expert" that can answer common questions about neurocode.fr. Find it here on the [oTTomator Live Agent Studio](https://studio.ottomator.ai/).
 
-bolt.diy was originally started by [Cole Medin](https://www.youtube.com/@ColeMedin) but has quickly grown into a massive community effort to build the BEST open source AI coding assistant!
+neurocode.fr was originally started by [Cole Medin](https://www.youtube.com/@ColeMedin) but has quickly grown into a massive community effort to build the BEST open source AI coding assistant!
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ bolt.diy was originally started by [Cole Medin](https://www.youtube.com/@ColeMed
 
 ## Join the community
 
-[Join the bolt.diy community here, in the thinktank on ottomator.ai!](https://thinktank.ottomator.ai)
+[Join the neurocode.fr community here, in the thinktank on ottomator.ai!](https://thinktank.ottomator.ai)
 
 
 ## Requested Additions
@@ -72,6 +72,10 @@ bolt.diy was originally started by [Cole Medin](https://www.youtube.com/@ColeMed
 - ⬜ Azure Open AI API Integration
 - ⬜ Perplexity Integration
 - ⬜ Vertex AI Integration
+- ⬜ Support for additional file types and binary files
+- ⬜ Enhanced Git integration with branch management
+- ⬜ Improved file change detection and diff visualization
+- ⬜ Multi-language support for UI elements
 
 ## Features
 
@@ -82,16 +86,23 @@ bolt.diy was originally started by [Cole Medin](https://www.youtube.com/@ColeMed
 - **Revert code to earlier versions** for easier debugging and quicker changes.
 - **Download projects as ZIP** for easy portability.
 - **Integration-ready Docker support** for a hassle-free setup.
+- **Git integration** with GitHub repository import and export
+- **Custom base URLs** for local AI model instances
+- **Secure API key management** with UI configuration
+- **Mobile-friendly interface** for coding on the go
+- **Visual selection tool** for targeted code changes
+- **Prompt library** with various use case templates
+- **Automatic package detection** and dependency installation
 
 ## Setup 
 
 If you're new to installing software from GitHub, don't worry! If you encounter any issues, feel free to submit an "issue" using the provided links or improve this documentation by forking the repository, editing the instructions, and submitting a pull request. The following instruction will help you get the stable branch up and running on your local machine in no time.  
 
-Let's get you up and running with the stable version of Bolt.DIY!
+Let's get you up and running with the stable version of neurocode.fr!
 
 ## Quick Download
 
-[![Download Latest Release](https://img.shields.io/github/v/release/stackblitz-labs/bolt.diy?label=Download%20Bolt&sort=semver)](https://github.com/stackblitz-labs/bolt.diy/releases/latest) ← Click here to go the the latest release version! 
+[![Download Latest Release](https://img.shields.io/github/v/release/stackblitz-labs/neurocode.fr?label=Download%20Neurocode&sort=semver)](https://github.com/stackblitz-labs/neurocode.fr/releases/latest) ← Click here to go the the latest release version! 
 
 - Next **click source.zip**
 
@@ -125,7 +136,7 @@ Node.js is required to run the application.
 
 ## Running the Application
 
-You have two options for running Bolt.DIY: directly on your machine or using Docker.
+You have two options for running neurocode.fr: directly on your machine or using Docker.
 
 ### Option 1: Direct Installation (Recommended for Beginners)
 
@@ -176,7 +187,7 @@ This option requires some familiarity with Docker but provides a more isolated e
 
 ### Adding Your API Keys
 
-Setting up your API keys in Bolt.DIY is straightforward:
+Setting up your API keys in neurocode.fr is straightforward:
 
 1. Open the home page (main interface)
 2. Select your desired provider from the dropdown menu
@@ -220,12 +231,12 @@ This method is recommended for developers who want to:
 1. **Clone the Repository**:
    ```bash
    # Using HTTPS
-   git clone https://github.com/stackblitz-labs/bolt.diy.git
+   git clone https://github.com/stackblitz-labs/neurocode.fr.git
    ```
 
 2. **Navigate to Project Directory**:
    ```bash
-   cd bolt.diy
+   cd neurocode.fr
    ```
 
 3. **Switch to the Main Branch**:
@@ -321,3 +332,20 @@ Explore upcoming features and priorities on our [Roadmap](https://roadmap.sh/r/o
 ## FAQ
 
 For answers to common questions, issues, and to see a list of recommended models, visit our [FAQ Page](FAQ.md).
+
+## Development Environment
+
+### System Requirements
+
+- Node.js 20.15.1 or higher
+- pnpm 9.4.0 or higher
+- Git (for development setup)
+- Chrome Canary (recommended for local development)
+
+### Code Standards
+
+- TypeScript for type safety
+- 2 spaces for indentation
+- ESLint and Prettier for code formatting
+- Husky pre-commit hooks for code quality
+- Conventional commit messages
