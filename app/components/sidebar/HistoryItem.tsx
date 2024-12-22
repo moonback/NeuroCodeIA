@@ -4,6 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { type ChatHistoryItem } from '~/lib/persistence';
 import WithTooltip from '~/components/ui/Tooltip';
 import { useEditChatDescription } from '~/lib/hooks';
+import { forwardRef, type ForwardedRef } from 'react';
 
 interface HistoryItemProps {
   item: ChatHistoryItem;
@@ -62,7 +63,7 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
           >
             <div className="flex items-center p-1 text-bolt-elements-textSecondary opacity-0 group-hover:opacity-100 transition-opacity">
               <ChatActionButton
-                toolTipContent="Export chat"
+                toolTipContent="Exporter la conversation"
                 icon="i-ph:download-simple"
                 onClick={(event) => {
                   event.preventDefault();
@@ -71,13 +72,13 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
               />
               {onDuplicate && (
                 <ChatActionButton
-                  toolTipContent="Duplicate chat"
+                  toolTipContent="Dupliquer la conversation"
                   icon="i-ph:copy"
                   onClick={() => onDuplicate?.(item.id)}
                 />
               )}
               <ChatActionButton
-                toolTipContent="Rename chat"
+                toolTipContent="Renommer la conversation"
                 icon="i-ph:pencil-fill"
                 onClick={(event) => {
                   event.preventDefault();
@@ -86,7 +87,7 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
               />
               <Dialog.Trigger asChild>
                 <ChatActionButton
-                  toolTipContent="Delete chat"
+                  toolTipContent="Supprimer la conversation"
                   icon="i-ph:trash"
                   className="[&&]:hover:text-bolt-elements-button-danger-text"
                   onClick={(event) => {
@@ -103,25 +104,31 @@ export function HistoryItem({ item, onDelete, onDuplicate, exportChat }: History
   );
 }
 
-const ChatActionButton = ({
-  toolTipContent,
-  icon,
-  className,
-  onClick,
-}: {
-  toolTipContent: string;
-  icon: string;
-  className?: string;
-  onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-  btnTitle?: string;
-}) => {
-  return (
-    <WithTooltip tooltip={toolTipContent}>
-      <button
-        type="button"
-        className={`scale-110 mr-2 hover:text-bolt-elements-item-contentAccent ${icon} ${className ? className : ''}`}
-        onClick={onClick}
-      />
-    </WithTooltip>
-  );
-};
+const ChatActionButton = forwardRef(
+  (
+    {
+      toolTipContent,
+      icon,
+      className,
+      onClick,
+    }: {
+      toolTipContent: string;
+      icon: string;
+      className?: string;
+      onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+      btnTitle?: string;
+    },
+    ref: ForwardedRef<HTMLButtonElement>,
+  ) => {
+    return (
+      <WithTooltip tooltip={toolTipContent}>
+        <button
+          ref={ref}
+          type="button"
+          className={`scale-110 mr-2 hover:text-bolt-elements-item-contentAccent ${icon} ${className ? className : ''}`}
+          onClick={onClick}
+        />
+      </WithTooltip>
+    );
+  },
+);

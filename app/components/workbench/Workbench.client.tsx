@@ -33,7 +33,7 @@ const sliderOptions: SliderOptions<WorkbenchViewType> = {
   },
   right: {
     value: 'preview',
-    text: 'Preview',
+    text: 'Aperçu',
   },
 };
 
@@ -153,11 +153,11 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                       }}
                     >
                       <div className="i-ph:code" />
-                      Download Code
+                      Télécharger le code
                     </PanelHeaderButton>
                     <PanelHeaderButton className="mr-1 text-sm" onClick={handleSyncFiles} disabled={isSyncing}>
                       {isSyncing ? <div className="i-ph:spinner" /> : <div className="i-ph:cloud-arrow-down" />}
-                      {isSyncing ? 'Syncing...' : 'Sync Files'}
+                      {isSyncing ? 'Synchronisation...' : 'Synchroniser les fichiers'}
                     </PanelHeaderButton>
                     <PanelHeaderButton
                       className="mr-1 text-sm"
@@ -166,18 +166,18 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                       }}
                     >
                       <div className="i-ph:terminal" />
-                      Toggle Terminal
+                      Basculer le terminal
                     </PanelHeaderButton>
                     <PanelHeaderButton
                       className="mr-1 text-sm"
                       onClick={() => {
                         const repoName = prompt(
-                          'Please enter a name for your new GitHub repository:',
+                          'Veuillez entrer un nom pour votre nouveau dépôt GitHub :',
                           'bolt-generated-project',
                         );
 
                         if (!repoName) {
-                          alert('Repository name is required. Push to GitHub cancelled.');
+                          alert('Le nom du dépôt est requis. Envoi vers GitHub annulé.');
                           return;
                         }
 
@@ -185,11 +185,11 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                         const githubToken = Cookies.get('githubToken');
 
                         if (!githubUsername || !githubToken) {
-                          const usernameInput = prompt('Please enter your GitHub username:');
-                          const tokenInput = prompt('Please enter your GitHub personal access token:');
+                          const usernameInput = prompt("Veuillez entrer votre nom d'utilisateur GitHub :");
+                          const tokenInput = prompt("Veuillez entrer votre jeton d'accès personnel GitHub :");
 
                           if (!usernameInput || !tokenInput) {
-                            alert('GitHub username and token are required. Push to GitHub cancelled.');
+                            alert("Le nom d'utilisateur et le jeton GitHub sont requis. Envoi vers GitHub annulé.");
                             return;
                           }
 
@@ -200,7 +200,7 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                       }}
                     >
                       <div className="i-ph:github-logo" />
-                      Push to GitHub
+                      Envoyer vers GitHub
                     </PanelHeaderButton>
                   </div>
                 )}

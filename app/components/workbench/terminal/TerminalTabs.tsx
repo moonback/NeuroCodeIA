@@ -107,7 +107,7 @@ export const TerminalTabs = memo(() => {
                       onClick={() => setActiveTerminal(index)}
                     >
                       <div className="i-ph:terminal-window-duotone text-lg" />
-                      Bolt Terminal
+                      Terminal Bolt
                     </button>
                   ) : (
                     <React.Fragment>
@@ -134,8 +134,8 @@ export const TerminalTabs = memo(() => {
             {terminalCount < MAX_TERMINALS && <IconButton icon="i-ph:plus" size="md" onClick={addTerminal} />}
             <IconButton
               className="ml-auto"
-              icon="i-ph:caret-down"
-              title="Close"
+              icon="i-ph:x"
+              title="Fermer le terminal"
               size="md"
               onClick={() => workbenchStore.toggleTerminal(false)}
             />

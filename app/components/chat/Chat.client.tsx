@@ -20,6 +20,8 @@ import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
 import { useSettings } from '~/lib/hooks/useSettings';
 import type { ProviderInfo } from '~/types/model';
+import { useSearchParams } from '@remix-run/react';
+import { createSampler } from '~/utils/sampler';
 
 const toastAnimation = cssTransition({
   enter: 'animated fadeInRight',
@@ -33,6 +35,10 @@ export function Chat() {
 
   const { ready, initialMessages, storeMessageHistory, importChat, exportChat } = useChatHistory();
   const title = useStore(description);
+
+  useEffect(() => {
+    workbenchStore.setReloadedMessages(initialMessages.map((m) => m.id));
+  }, [initialMessages]);
 
   return (
     <>
@@ -76,6 +82,24 @@ export function Chat() {
   );
 }
 
+const processSampledMessages = createSampler(
+  (options: {
+    messages: Message[];
+    initialMessages: Message[];
+    isLoading: boolean;
+    parseMessages: (messages: Message[], isLoading: boolean) => void;
+    storeMessageHistory: (messages: Message[]) => Promise<void>;
+  }) => {
+    const { messages, initialMessages, isLoading, parseMessages, storeMessageHistory } = options;
+    parseMessages(messages, isLoading);
+
+    if (messages.length > initialMessages.length) {
+      storeMessageHistory(messages).catch((error) => toast.error(error.message));
+    }
+  },
+  50,
+);
+
 interface ChatProps {
   initialMessages: Message[];
   storeMessageHistory: (messages: Message[]) => Promise<void>;
@@ -92,8 +116,10 @@ export const ChatImpl = memo(
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]); // Move here
     const [imageDataList, setImageDataList] = useState<string[]>([]); // Move here
+    const [searchParams, setSearchParams] = useSearchParams();
     const files = useStore(workbenchStore.files);
-    const { activeProviders } = useSettings();
+    const actionAlert = useStore(workbenchStore.alert);
+    const { activeProviders, promptId } = useSettings();
 
     const [model, setModel] = useState(() => {
       const savedModel = Cookies.get('selectedModel');
@@ -101,7 +127,7 @@ export const ChatImpl = memo(
     });
     const [provider, setProvider] = useState(() => {
       const savedProvider = Cookies.get('selectedProvider');
-      return PROVIDER_LIST.find((p) => p.name === savedProvider) || DEFAULT_PROVIDER;
+      return (PROVIDER_LIST.find((p) => p.name === savedProvider) || DEFAULT_PROVIDER) as ProviderInfo;
     });
 
     const { showChat } = useStore(chatStore);
@@ -115,19 +141,47 @@ export const ChatImpl = memo(
       body: {
         apiKeys,
         files,
+        promptId,
       },
+      sendExtraMessageFields: true,
       onError: (error) => {
         logger.error('Request failed\n\n', error);
         toast.error(
           'There was an error processing your request: ' + (error.message ? error.message : 'No details were returned'),
         );
       },
-      onFinish: () => {
+      onFinish: (message, response) => {
+        const usage = response.usage;
+
+        if (usage) {
+          console.log('Token usage:', usage);
+
+          // You can now use the usage data as needed
+        }
+
         logger.debug('Finished streaming');
       },
       initialMessages,
       initialInput: Cookies.get(PROMPT_COOKIE_KEY) || '',
     });
+    useEffect(() => {
+      const prompt = searchParams.get('prompt');
+      console.log(prompt, searchParams, model, provider);
+
+      if (prompt) {
+        setSearchParams({});
+        runAnimation();
+        append({
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${prompt}`,
+            },
+          ] as any, // Type assertion to bypass compiler check
+        });
+      }
+    }, [model, provider, searchParams]);
 
     const { enhancingPrompt, promptEnhanced, enhancePrompt, resetEnhancer } = usePromptEnhancer();
     const { parsedMessages, parseMessages } = useMessageParser();
@@ -139,11 +193,13 @@ export const ChatImpl = memo(
     }, []);
 
     useEffect(() => {
-      parseMessages(messages, isLoading);
-
-      if (messages.length > initialMessages.length) {
-        storeMessageHistory(messages).catch((error) => toast.error(error.message));
-      }
+      processSampledMessages({
+        messages,
+        initialMessages,
+        isLoading,
+        parseMessages,
+        storeMessageHistory,
+      });
     }, [messages, isLoading, parseMessages]);
 
     const scrollTextArea = () => {
@@ -357,6 +413,8 @@ export const ChatImpl = memo(
         setUploadedFiles={setUploadedFiles}
         imageDataList={imageDataList}
         setImageDataList={setImageDataList}
+        actionAlert={actionAlert}
+        clearAlert={() => workbenchStore.clearAlert()}
       />
     );
   },

@@ -116,7 +116,7 @@ export const ImportFolderButton: React.FC<ImportFolderButtonProps> = ({ classNam
         disabled={isLoading}
       >
         <div className="i-ph:upload-simple" />
-        {isLoading ? 'Importing...' : 'Import Folder'}
+        {isLoading ? 'Importation...' : 'Importer un Dossier'}
       </button>
     </>
   );
