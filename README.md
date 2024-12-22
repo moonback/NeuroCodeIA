@@ -70,7 +70,7 @@ neurocode.fr was originally started by [Cole Medin](https://www.youtube.com/@Col
 - ⬜ Upload documents for knowledge - UI design templates, a code base to reference coding style, etc.
 - ⬜ Voice prompting
 - ⬜ Azure Open AI API Integration
-- ⬜ Perplexity Integration
+- ✅ Perplexity Integration
 - ⬜ Vertex AI Integration
 - ⬜ Support for additional file types and binary files
 - ⬜ Enhanced Git integration with branch management
