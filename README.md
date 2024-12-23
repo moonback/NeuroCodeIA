@@ -1,23 +1,26 @@
-# neurocode.fr (Précédemment bolt.diy)
+# neurocode (Previously oTToDev)
+[![neurocode: AI-Powered Full-Stack Web Development in the Browser](./public/social_preview_index.jpg)]
 
-Bienvenue sur neurocode.fr, la version officielle open source de Neurocode (anciennement connu sous le nom de bolt.diy et bolt.new ANY LLM). Cette plateforme vous permet de choisir le modèle LLM que vous souhaitez utiliser pour chaque prompt ! Actuellement, vous pouvez utiliser des modèles comme OpenAI, Anthropic, Ollama, OpenRouter, Gemini, LMStudio, Mistral, xAI, HuggingFace, DeepSeek ou Groq, et l'architecture est extensible pour inclure tout autre modèle compatible avec le SDK AI de Vercel. Consultez les instructions ci-dessous pour l’exécuter localement et l’étendre à d’autres modèles.
+Bienvenue sur neurocode, la version officielle open source de Bolt.new (anciennement connu sous le nom de oTToDev et bolt.new ANY LLM), qui vous permet de choisir le modèle LLM que vous souhaitez utiliser pour chaque prompt ! Actuellement, vous pouvez utiliser des modèles comme OpenAI, Anthropic, Ollama, OpenRouter, Gemini, LMStudio, Mistral, xAI, HuggingFace, DeepSeek ou Groq, et l'architecture est extensible pour inclure tout autre modèle compatible avec le SDK AI de Vercel. Consultez les instructions ci-dessous pour l'exécuter localement et l'étendre à d'autres modèles.
 
+Consultez la documentation de neurocode pour plus d'informations.
+
+Nous avons également lancé un agent expérimental appelé "neurocode Expert", qui peut répondre aux questions fréquentes sur neurocode. Découvrez-le sur oTTomator Live Agent Studio.
+
+neurocode a été initié par Cole Medin et est rapidement devenu un projet communautaire massif visant à créer le MEILLEUR assistant de codage basé sur l'IA en open source !
 
 ## Table des matières
 
-- [Rejoindre la communauté](#rejoindre-la-communauté)
 - [Ajouts demandés](#ajouts-demandés)
 - [Fonctionnalités](#fonctionnalités)
 - [Configuration](#configuration)
-- [Exécution de l’application](#exécution-de-lapplication)
+- [Exécution de l'application](#exécution-de-lapplication)
 - [Scripts disponibles](#scripts-disponibles)
 - [Contribuer](#contribuer)
 - [Feuille de route](#feuille-de-route)
 - [FAQ](#faq)
 
-## Rejoindre la communauté
 
-[Rejoignez la communauté neurocode.fr ici, dans le ThinkTank sur ottomator.ai !](https://thinktank.ottomator.ai)
 
 ## Ajouts demandés
 
@@ -33,7 +36,7 @@ Bienvenue sur neurocode.fr, la version officielle open source de Neurocode (anci
 - ✅ Synchronisation des fichiers en local (@muzafferkadir)  
 - ✅ Conteneurisation avec Docker pour une installation simplifiée (@aaronbolton)  
 - ✅ Publication de projets sur GitHub (@goncaloalves)  
-- ✅ Gestion des clés API via l’interface (@ali00209)  
+- ✅ Gestion des clés API via l'interface (@ali00209)  
 - ✅ Intégration de xAI Grok Beta (@milutinke)  
 - ✅ Intégration LM Studio (@karrot0)  
 - ✅ Intégration HuggingFace (@ahsan3219)  
@@ -44,14 +47,14 @@ Bienvenue sur neurocode.fr, la version officielle open source de Neurocode (anci
 - ✅ Longueur maximale dynamique pour les tokens des modèles (@hasanraiyan)  
 - ✅ Amélioration des prompts (@SujalXplores)  
 - ✅ Mise en cache des prompts (@SujalXplores)  
-- ✅ Chargement de projets locaux dans l’application (@wonderwhy-er)  
+- ✅ Chargement de projets locaux dans l'application (@wonderwhy-er)  
 - ✅ Intégration Together (@mouimet-infinisoft)  
 - ✅ Interface adaptée aux mobiles (@qwikode)  
 - ✅ Attacher des images aux prompts (@atrokhym)  
 - ✅ Bouton pour cloner un dépôt Git (@thecodacus)  
 - ✅ Import Git depuis une URL (@thecodacus)  
-- ✅ Bibliothèque de prompts avec des variations pour divers cas d’usage (@thecodacus)  
-- ✅ Détection de `package.json` pour l’installation et l’exécution automatiques (@wonderwhy-er)  
+- ✅ Bibliothèque de prompts avec des variations pour divers cas d'usage (@thecodacus)  
+- ✅ Détection de `package.json` pour l'installation et l'exécution automatiques (@wonderwhy-er)  
 - ✅ Outil de sélection visuelle pour cibler les modifications (@emcconnell)  
 - ⬜ **Priorité élevée** : Réduction des réécritures fréquentes de fichiers (verrouillage des fichiers et diff)  
 - ⬜ **Priorité élevée** : Amélioration des prompts pour les LLM de petite taille  
@@ -67,11 +70,11 @@ Bienvenue sur neurocode.fr, la version officielle open source de Neurocode (anci
 - ⬜ Support pour plus de types de fichiers et fichiers binaires  
 - ⬜ Meilleure intégration Git avec gestion des branches  
 - ⬜ Détection améliorée des changements de fichiers et visualisation des diff  
-- ⬜ Support multilingue pour l’interface utilisateur  
+- ⬜ Support multilingue pour l'interface utilisateur  
 
 ## Fonctionnalités
 
-- **Développement web full-stack basé sur l’IA** directement dans le navigateur  
+- **Développement web full-stack basé sur l'IA** directement dans le navigateur  
 - **Support multi-LLM** avec une architecture extensible  
 - **Attachez des images aux prompts** pour un meilleur contexte  
 - **Terminal intégré** pour visualiser les commandes exécutées  
@@ -82,9 +85,9 @@ Bienvenue sur neurocode.fr, la version officielle open source de Neurocode (anci
 - **Gestion sécurisée des clés API** via une interface dédiée  
 - **Interface mobile-friendly** pour coder en déplacement  
 - **Outil de sélection visuelle** pour des modifications ciblées  
-- **Bibliothèque de prompts** adaptée à divers cas d’usage  
+- **Bibliothèque de prompts** adaptée à divers cas d'usage  
 - **Détection automatique des dépendances** et installation automatique  
 
 ---
 
-Pour des détails supplémentaires, voir les sections suivantes ou consultez la [documentation complète](https://stackblitz-labs.github.io/neurocode.fr/).
+Pour des détails supplémentaires, voir les sections suivantes ou consultez la documentation complète.
