@@ -2,11 +2,6 @@
 
 Bienvenue sur neurocode.fr, la version officielle open source de Neurocode (anciennement connu sous le nom de bolt.diy et bolt.new ANY LLM). Cette plateforme vous permet de choisir le modèle LLM que vous souhaitez utiliser pour chaque prompt ! Actuellement, vous pouvez utiliser des modèles comme OpenAI, Anthropic, Ollama, OpenRouter, Gemini, LMStudio, Mistral, xAI, HuggingFace, DeepSeek ou Groq, et l'architecture est extensible pour inclure tout autre modèle compatible avec le SDK AI de Vercel. Consultez les instructions ci-dessous pour l’exécuter localement et l’étendre à d’autres modèles.
 
-Consultez la [documentation de neurocode.fr](https://stackblitz-labs.github.io/neurocode.fr/) pour plus d’informations.
-
-Nous avons également lancé un agent expérimental appelé "Expert neurocode.fr", qui peut répondre aux questions fréquentes sur neurocode.fr. Découvrez-le sur [oTTomator Live Agent Studio](https://studio.ottomator.ai/).
-
-neurocode.fr a été initié par [Cole Medin](https://www.youtube.com/@ColeMedin) et est rapidement devenu un projet communautaire massif visant à créer le MEILLEUR assistant de codage basé sur l’IA en open source !
 
 ## Table des matières
 
