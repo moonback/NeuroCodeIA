@@ -3,7 +3,6 @@
 
 Bienvenue sur **Neurocode**, la version open source officielle de Neurocode, permettant de choisir le modèle d'IA (LLM) utilisé pour chaque prompt ! Actuellement, Neurocode prend en charge OpenAI, Anthropic, Ollama, OpenRouter, Gemini, LMStudio, Mistral, xAI, HuggingFace, DeepSeek, et Groq, avec la possibilité d'ajouter facilement d'autres modèles grâce au Vercel AI SDK. Consultez les instructions ci-dessous pour exécuter l'application localement et ajouter des modèles supplémentaires.
 
-Consultez la [documentation Neurocode](https://stackblitz-labs.github.io/bolt.diy/) pour plus d'informations.
 
 ## Table des matières
 
@@ -138,11 +137,6 @@ Nous acceptons les contributions avec plaisir ! Consultez notre [Guide de Contri
 
 ---
 
-## Feuille de route
-
-Découvrez les fonctionnalités à venir et les priorités dans notre [Feuille de Route](https://roadmap.sh/r/neurocode-roadmap).
-
----
 
 ## FAQ
 
