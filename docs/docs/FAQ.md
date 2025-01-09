@@ -1,91 +1,77 @@
-# Frequently Asked Questions (FAQ)
+# Questions Fréquemment Posées (FAQ)
 
-<details>
-<summary><strong>What are the best models for bolt.diy?</strong></summary>
+## Quels sont les meilleurs modèles pour bolt.diy ?
 
-For the best experience with bolt.diy, we recommend using the following models:
+Pour la meilleure expérience avec bolt.diy, nous recommandons d'utiliser les modèles suivants :
 
-- **Claude 3.5 Sonnet (old)**: Best overall coder, providing excellent results across all use cases
-- **Gemini 2.0 Flash**: Exceptional speed while maintaining good performance
-- **GPT-4o**: Strong alternative to Claude 3.5 Sonnet with comparable capabilities
-- **DeepSeekCoder V2 236b**: Best open source model (available through OpenRouter, DeepSeek API, or self-hosted)
-- **Qwen 2.5 Coder 32b**: Best model for self-hosting with reasonable hardware requirements
+- **Claude 3.5 Sonnet (ancien)** : Meilleur codeur global, fournissant d'excellents résultats dans tous les cas d'utilisation
+- **Gemini 2.0 Flash** : Vitesse exceptionnelle tout en maintenant de bonnes performances
+- **GPT-4o** : Solide alternative à Claude 3.5 Sonnet avec des capacités comparables
+- **DeepSeekCoder V2 236b** : Meilleur modèle open source (disponible via OpenRouter, DeepSeek API, ou auto-hébergé)
+- **Qwen 2.5 Coder 32b** : Meilleur modèle pour l'auto-hébergement avec des exigences matérielles raisonnables
 
-**Note**: Models with less than 7b parameters typically lack the capability to properly interact with bolt!
-</details>
+**Note** : Les modèles avec moins de 7b paramètres manquent généralement de la capacité d'interagir correctement avec bolt !
 
-<details>
-<summary><strong>How do I get the best results with bolt.diy?</strong></summary>
+## Comment obtenir les meilleurs résultats avec bolt.diy ?
 
-- **Be specific about your stack**:  
-  Mention the frameworks or libraries you want to use (e.g., Astro, Tailwind, ShadCN) in your initial prompt. This ensures that bolt.diy scaffolds the project according to your preferences.
+- **Soyez précis sur votre stack** :  
+  Mentionnez les frameworks ou bibliothèques que vous souhaitez utiliser (ex : Astro, Tailwind, ShadCN) dans votre prompt initial. Cela garantit que bolt.diy structure le projet selon vos préférences.
 
-- **Use the enhance prompt icon**:  
-  Before sending your prompt, click the *enhance* icon to let the AI refine your prompt. You can edit the suggested improvements before submitting.
+- **Utilisez l'icône d'amélioration du prompt** :  
+  Avant d'envoyer votre prompt, cliquez sur l'icône *améliorer* pour laisser l'IA affiner votre prompt. Vous pouvez modifier les améliorations suggérées avant de les soumettre.
 
-- **Scaffold the basics first, then add features**:  
-  Ensure the foundational structure of your application is in place before introducing advanced functionality. This helps bolt.diy establish a solid base to build on.
+- **Construisez d'abord les bases, puis ajoutez les fonctionnalités** :  
+  Assurez-vous que la structure fondamentale de votre application est en place avant d'introduire des fonctionnalités avancées. Cela aide bolt.diy à établir une base solide sur laquelle construire.
 
-- **Batch simple instructions**:  
-  Combine simple tasks into a single prompt to save time and reduce API credit consumption. For example:  
-  *"Change the color scheme, add mobile responsiveness, and restart the dev server."*
-</details>
+- **Regroupez les instructions simples** :  
+  Combinez les tâches simples en un seul prompt pour gagner du temps et réduire la consommation de crédits API. Par exemple :  
+  *"Changez le schéma de couleurs, ajoutez la réactivité mobile et redémarrez le serveur de développement."*
 
-<details>
-<summary><strong>How do I contribute to bolt.diy?</strong></summary>
+## Comment contribuer à bolt.diy ?
 
-Check out our [Contribution Guide](CONTRIBUTING.md) for more details on how to get involved!
-</details>
+Consultez notre [Guide de Contribution](CONTRIBUTING.md) pour plus de détails sur la façon de participer !
 
-<details>
-<summary><strong>What are the future plans for bolt.diy?</strong></summary>
+## Quels sont les plans futurs pour bolt.diy ?
 
-Visit our [Roadmap](https://roadmap.sh/r/ottodev-roadmap-2ovzo) for the latest updates.  
-New features and improvements are on the way!
-</details>
+Visitez notre [Feuille de route](https://roadmap.sh/r/ottodev-roadmap-2ovzo) pour les dernières mises à jour.  
+De nouvelles fonctionnalités et améliorations sont en cours !
 
-<details>
-<summary><strong>Why are there so many open issues/pull requests?</strong></summary>
+## Pourquoi y a-t-il tant de problèmes/pull requests ouverts ?
 
-bolt.diy began as a small showcase project on @ColeMedin's YouTube channel to explore editing open-source projects with local LLMs. However, it quickly grew into a massive community effort!  
+bolt.diy a commencé comme un petit projet de démonstration sur la chaîne YouTube de @ColeMedin pour explorer l'édition de projets open-source avec des LLMs locaux. Cependant, il s'est rapidement transformé en un effort communautaire massif !
 
-We're forming a team of maintainers to manage demand and streamline issue resolution. The maintainers are rockstars, and we're also exploring partnerships to help the project thrive.
-</details>
+Nous formons une équipe de mainteneurs pour gérer la demande et rationaliser la résolution des problèmes. Les mainteneurs sont des stars, et nous explorons également des partenariats pour aider le projet à prospérer.
 
-<details>
-<summary><strong>How do local LLMs compare to larger models like Claude 3.5 Sonnet for bolt.diy?</strong></summary>
+## Comment les LLMs locaux se comparent-ils aux modèles plus grands comme Claude 3.5 Sonnet pour bolt.diy ?
 
-While local LLMs are improving rapidly, larger models like GPT-4o, Claude 3.5 Sonnet, and DeepSeek Coder V2 236b still offer the best results for complex applications. Our ongoing focus is to improve prompts, agents, and the platform to better support smaller local LLMs.
-</details>
+Bien que les LLMs locaux s'améliorent rapidement, les modèles plus grands comme GPT-4o, Claude 3.5 Sonnet et DeepSeek Coder V2 236b offrent toujours les meilleurs résultats pour les applications complexes. Notre objectif continu est d'améliorer les prompts, les agents et la plateforme pour mieux supporter les LLMs locaux plus petits.
 
-<details>
-<summary><strong>Common Errors and Troubleshooting</strong></summary>
+## Erreurs Courantes et Dépannage
 
-### **"There was an error processing this request"**
-This generic error message means something went wrong. Check both:
-- The terminal (if you started the app with Docker or `pnpm`).
-- The developer console in your browser (press `F12` or right-click > *Inspect*, then go to the *Console* tab).
+### "Une erreur s'est produite lors du traitement de cette requête"
+Ce message d'erreur générique signifie que quelque chose s'est mal passé. Vérifiez :
+- Le terminal (si vous avez démarré l'application avec Docker ou `pnpm`).
+- La console développeur de votre navigateur (appuyez sur `F12` ou clic droit > *Inspecter*, puis allez dans l'onglet *Console*).
 
-### **"x-api-key header missing"**
-This error is sometimes resolved by restarting the Docker container.  
-If that doesn't work, try switching from Docker to `pnpm` or vice versa. We're actively investigating this issue.
+### "En-tête x-api-key manquant"
+Cette erreur est parfois résolue en redémarrant le conteneur Docker.  
+Si cela ne fonctionne pas, essayez de passer de Docker à `pnpm` ou vice versa. Nous enquêtons activement sur ce problème.
 
-### **Blank preview when running the app**
-A blank preview often occurs due to hallucinated bad code or incorrect commands.  
-To troubleshoot:
-- Check the developer console for errors.
-- Remember, previews are core functionality, so the app isn't broken! We're working on making these errors more transparent.
+### Aperçu vide lors de l'exécution de l'application
+Un aperçu vide survient souvent en raison de code halluciné ou de commandes incorrectes.  
+Pour dépanner :
+- Vérifiez la console développeur pour les erreurs.
+- Rappelez-vous, les aperçus sont une fonctionnalité centrale, donc l'application n'est pas cassée ! Nous travaillons à rendre ces erreurs plus transparentes.
 
-### **"Everything works, but the results are bad"**
-Local LLMs like Qwen-2.5-Coder are powerful for small applications but still experimental for larger projects. For better results, consider using larger models like GPT-4o, Claude 3.5 Sonnet, or DeepSeek Coder V2 236b.
+### "Tout fonctionne, mais les résultats sont mauvais"
+Les LLMs locaux comme Qwen-2.5-Coder sont puissants pour les petites applications mais encore expérimentaux pour les projets plus importants. Pour de meilleurs résultats, envisagez d'utiliser des modèles plus grands comme GPT-4o, Claude 3.5 Sonnet, ou DeepSeek Coder V2 236b.
 
-### **"Received structured exception #0xc0000005: access violation"**
-If you are getting this, you are probably on Windows. The fix is generally to update the [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
+### "Exception structurée reçue #0xc0000005 : violation d'accès"
+Si vous obtenez ceci, vous êtes probablement sous Windows. La solution consiste généralement à mettre à jour le [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 
-### **"Miniflare or Wrangler errors in Windows"**
-You will need to make sure you have the latest version of Visual Studio C++ installed (14.40.33816), more information here https://github.com/stackblitz-labs/bolt.diy/issues/19.
-</details>
+### "Erreurs Miniflare ou Wrangler sous Windows"
+Vous devrez vous assurer d'avoir la dernière version de Visual Studio C++ installée (14.40.33816), plus d'informations ici https://github.com/stackblitz-labs/bolt.diy/issues/19.
 
 ---
 
-Got more questions? Feel free to reach out or open an issue in our GitHub repo!
+Vous avez d'autres questions ? N'hésitez pas à nous contacter ou à ouvrir une issue sur notre repo GitHub !

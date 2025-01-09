@@ -1,5 +1,4 @@
 import { format, isAfter, isThisWeek, isThisYear, isToday, isYesterday, subDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import type { ChatHistoryItem } from '~/lib/persistence';
 
 type Bin = { category: string; items: ChatHistoryItem[] };
@@ -32,7 +31,7 @@ export function binDates(_list: ChatHistoryItem[]) {
 
 function dateCategory(date: Date) {
   if (isToday(date)) {
-    return "Aujourd'hui";
+    return 'Aujourd\'hui';
   }
 
   if (isYesterday(date)) {
@@ -40,8 +39,19 @@ function dateCategory(date: Date) {
   }
 
   if (isThisWeek(date)) {
-    // Format les jours de la semaine en français
-    return format(date, 'eeee', { locale: fr });
+    // e.g., "Lundi"
+    const dayName = format(date, 'eeee');
+    // Traduire les jours de la semaine
+    const days: { [key: string]: string } = {
+      'Monday': 'Lundi',
+      'Tuesday': 'Mardi',
+      'Wednesday': 'Mercredi',
+      'Thursday': 'Jeudi',
+      'Friday': 'Vendredi',
+      'Saturday': 'Samedi',
+      'Sunday': 'Dimanche'
+    };
+    return days[dayName] || dayName;
   }
 
   const thirtyDaysAgo = subDays(new Date(), 30);
@@ -51,10 +61,42 @@ function dateCategory(date: Date) {
   }
 
   if (isThisYear(date)) {
-    // Format les mois en français
-    return format(date, 'MMMM', { locale: fr });
+    // e.g., "Juillet"
+    const monthName = format(date, 'MMMM');
+    // Traduire les mois
+    const months: { [key: string]: string } = {
+      'January': 'Janvier',
+      'February': 'Février',
+      'March': 'Mars',
+      'April': 'Avril',
+      'May': 'Mai',
+      'June': 'Juin',
+      'July': 'Juillet',
+      'August': 'Août',
+      'September': 'Septembre',
+      'October': 'Octobre',
+      'November': 'Novembre',
+      'December': 'Décembre'
+    };
+    return months[monthName] || monthName;
   }
 
-  // Format date complète en français
-  return format(date, 'MMMM yyyy', { locale: fr });
+  // e.g., "Juillet 2023"
+  const monthAndYear = format(date, 'MMMM yyyy');
+  const [month, year] = monthAndYear.split(' ');
+  const months: { [key: string]: string } = {
+    'January': 'Janvier',
+    'February': 'Février',
+    'March': 'Mars',
+    'April': 'Avril',
+    'May': 'Mai',
+    'June': 'Juin',
+    'July': 'Juillet',
+    'August': 'Août',
+    'September': 'Septembre',
+    'October': 'Octobre',
+    'November': 'Novembre',
+    'December': 'Décembre'
+  };
+  return `${months[month] || month} ${year}`;
 }

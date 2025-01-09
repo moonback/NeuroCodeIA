@@ -4,8 +4,9 @@ import type { IProviderSetting } from '~/types/model';
 export interface ModelInfo {
   name: string;
   label: string;
-  provider: string;
-  maxTokenAllowed: number;
+  provider?: string;
+  maxTokenAllowed?: number;
+  description?: string;
 }
 
 export interface ProviderInfo {
@@ -28,5 +29,6 @@ export interface ProviderInfo {
 }
 export interface ProviderConfig {
   baseUrlKey?: string;
+  baseUrl?: string;
   apiTokenKey?: string;
 }

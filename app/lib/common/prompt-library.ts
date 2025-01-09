@@ -17,14 +17,19 @@ export class PromptLibrary {
     }
   > = {
     default: {
-      label: 'Default Prompt',
-      description: 'This is the battle tested default system Prompt',
+      label: 'Prompt par défaut',
+      description: 'Ceci est le prompt système éprouvé par défaut',
       get: (options) => getSystemPrompt(options.cwd),
     },
     optimized: {
-      label: 'Optimized Prompt (experimental)',
-      description: 'an Experimental version of the prompt for lower token usage',
+      label: 'Prompt Optimisé (expérimental)',
+      description: 'Une version expérimentale du prompt pour une utilisation réduite des tokens',
       get: (options) => optimized(options),
+    },
+    minimal: {
+      label: 'Prompt React',
+      description: 'Prompt pour une application React',
+      get: (options) => getSystemPrompt(options.cwd),
     },
   };
   static getList() {

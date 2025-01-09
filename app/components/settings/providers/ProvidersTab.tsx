@@ -4,222 +4,220 @@ import { useSettings } from '~/lib/hooks/useSettings';
 import { LOCAL_PROVIDERS, URL_CONFIGURABLE_PROVIDERS } from '~/lib/stores/settings';
 import type { IProviderConfig } from '~/types/model';
 import { logStore } from '~/lib/stores/logs';
-import { motion } from 'framer-motion';
-import DefaultIcon from '/icons/Default.svg';
+import { BeakerIcon, MagnifyingGlassIcon, ServerIcon, CloudIcon, InformationCircleIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { providerBaseUrlEnvKeys } from '~/utils/constants';
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
+const DefaultIcon = '/icons/Default.svg';
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
+const getProviderDescription = (name: string): string => {
+  const descriptions: { [key: string]: string } = {
+    'OpenAI': 'GPT-3.5, GPT-4',
+    'Anthropic': 'Claude 2, Claude Instant',
+    'Ollama': 'Modèles locaux',
+    'LMStudio': 'Interface locale',
+    'OpenAILike': 'Compatible OpenAI',
+  };
+  return descriptions[name] || 'Service IA';
 };
 
 export default function ProvidersTab() {
   const { providers, updateProviderSettings, isLocalModel } = useSettings();
   const [filteredProviders, setFilteredProviders] = useState<IProviderConfig[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [hoveredProvider, setHoveredProvider] = useState<string | null>(null);
+  const [expandedProvider, setExpandedProvider] = useState<string | null>(null);
 
   useEffect(() => {
-    let newFilteredProviders = Object.entries(providers)
-      .map(([key, value]) => ({
-        ...value,
-        name: key,
-      }))
-      .filter((provider) =>
-        !searchTerm ||
-        provider.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    let newFilteredProviders: IProviderConfig[] = Object.entries(providers).map(([key, value]) => ({
+      ...value,
+      name: key,
+    }));
 
-    if (!isLocalModel) {
-      newFilteredProviders = newFilteredProviders.filter(
-        (provider) => !LOCAL_PROVIDERS.includes(provider.name)
+    if (searchTerm && searchTerm.length > 0) {
+      newFilteredProviders = newFilteredProviders.filter((provider) =>
+        provider.name.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
+    if (!isLocalModel) {
+      newFilteredProviders = newFilteredProviders.filter((provider) => !LOCAL_PROVIDERS.includes(provider.name));
+    }
+
     newFilteredProviders.sort((a, b) => a.name.localeCompare(b.name));
-    setFilteredProviders(newFilteredProviders);
+    const regular = newFilteredProviders.filter((p) => !URL_CONFIGURABLE_PROVIDERS.includes(p.name));
+    const urlConfigurable = newFilteredProviders.filter((p) => URL_CONFIGURABLE_PROVIDERS.includes(p.name));
+    setFilteredProviders([...regular, ...urlConfigurable]);
   }, [providers, searchTerm, isLocalModel]);
 
   const renderProviderCard = (provider: IProviderConfig) => {
     const envBaseUrlKey = providerBaseUrlEnvKeys[provider.name].baseUrlKey;
     const envBaseUrl = envBaseUrlKey ? import.meta.env[envBaseUrlKey] : undefined;
     const isUrlConfigurable = URL_CONFIGURABLE_PROVIDERS.includes(provider.name);
+    const isExpanded = expandedProvider === provider.name;
 
     return (
-      <motion.div
-        variants={itemVariants}
+      <div
         key={provider.name}
-        className="provider-card relative"
-        onMouseEnter={() => setHoveredProvider(provider.name)}
-        onMouseLeave={() => setHoveredProvider(null)}
+        className={`provider-card p-3 rounded-lg hover:bg-bolt-elements-bg-depth-3 transition-all border border-bolt-elements-borderColor ${
+          isExpanded ? 'bg-bolt-elements-bg-depth-2' : 'bg-bolt-elements-bg-depth-1'
+        }`}
       >
-        <div className={`
-          flex flex-col bg-bolt-elements-background-depth-2
-          p-6 rounded-xl border transition-all duration-200
-          ${hoveredProvider === provider.name
-            ? 'border-bolt-elements-focus shadow-lg transform scale-[1.02]'
-            : 'border-bolt-elements-borderColor'
-          }
-        `}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <img
-                  src={`/icons/${provider.name}.svg`}
-                  onError={(e) => { e.currentTarget.src = DefaultIcon }}
-                  alt={`${provider.name} icon`}
-                  className="w-8 h-8 dark:invert transition-transform duration-200 hover:scale-110"
-                />
-                {provider.settings.enabled && (
-                  <div
-                    className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-bolt-elements-background-depth-2"
-                    title="Fournisseur actif"
-                  />
-                )}
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-bolt-elements-textPrimary">
-                  {provider.name}
-                </h3>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-shrink-0">
+            <div className="w-7 h-7 rounded-md bg-bolt-elements-bg-depth-2 p-1 flex items-center justify-center">
+              <img
+                src={`/icons/${provider.name}.svg`}
+                onError={(e) => {
+                  e.currentTarget.src = DefaultIcon;
+                }}
+                alt={`${provider.name} icon`}
+                className="w-5 h-5 dark:invert"
+              />
+            </div>
+            {provider.settings.enabled && (
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-bolt-elements-bg-depth-1" />
+            )}
+          </div>
+
+          <div className="flex-grow min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm font-medium text-bolt-elements-textPrimary truncate">{provider.name}</span>
+              <div className="flex items-center gap-1.5">
                 {isUrlConfigurable && (
-                  <span className="text-xs text-bolt-elements-textTertiary">
-                    Configuration personnalisée disponible
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 leading-none">
+                    Beta
                   </span>
                 )}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full leading-none ${
+                  provider.settings.enabled ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'
+                }`}>
+                  {provider.settings.enabled ? 'Actif' : 'Inactif'}
+                </span>
               </div>
             </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[11px] text-bolt-elements-textTertiary truncate">
+                {getProviderDescription(provider.name)}
+              </span>
+              {envBaseUrl && (
+                <span className="text-[10px] text-green-400 flex items-center gap-1">
+                  <ServerIcon className="w-3 h-3" />
+                  .env
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setExpandedProvider(isExpanded ? null : provider.name)}
+              className={`p-1 rounded-md hover:bg-bolt-elements-bg-depth-3 text-bolt-elements-textTertiary transition-transform ${
+                isExpanded ? 'rotate-90' : ''
+              }`}
+            >
+              <ChevronRightIcon className="w-4 h-4" />
+            </button>
             <Switch
               className="ml-auto"
               checked={provider.settings.enabled}
               onCheckedChange={(enabled) => {
                 updateProviderSettings(provider.name, { ...provider.settings, enabled });
-                logStore.logProvider(
-                  `Provider ${provider.name} ${enabled ? 'enabled' : 'disabled'}`,
-                  { provider: provider.name }
-                );
+                logStore.logProvider(`${enabled ? 'Activation' : 'Désactivation'} de ${provider.name}`, { provider: provider.name });
               }}
-              title={provider.settings.enabled ? 'Désactiver' : 'Activer'}
             />
           </div>
+        </div>
 
-          {isUrlConfigurable && provider.settings.enabled && (
-            <div className="mt-2 space-y-2">
-              {envBaseUrl && (
-                <div className="px-3 py-1.5 bg-green-500/10 rounded-md">
-                  <span className="text-xs text-green-500">
-                    Configuration .env : {envBaseUrl}
-                  </span>
+        {isExpanded && (
+          <div className="mt-3 pt-3 border-t border-bolt-elements-borderColor">
+            <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+              <div className="flex items-center justify-between px-2 py-1 rounded bg-bolt-elements-bg-depth-1">
+                <span className="text-bolt-elements-textSecondary">Type</span>
+                <span className="text-bolt-elements-textPrimary font-medium">
+                  {isUrlConfigurable ? 'Auto-hébergé' : 'Cloud'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between px-2 py-1 rounded bg-bolt-elements-bg-depth-1">
+                <span className="text-bolt-elements-textSecondary">État</span>
+                <span className={`font-medium ${provider.settings.enabled ? 'text-green-500' : 'text-gray-500'}`}>
+                  {provider.settings.enabled ? 'En ligne' : 'Hors ligne'}
+                </span>
+              </div>
+            </div>
+
+            {isUrlConfigurable && provider.settings.enabled && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-bolt-elements-textSecondary">
+                    {envBaseUrl ? 'URL personnalisée' : 'URL de base'}
+                  </label>
                 </div>
-              )}
-              <div className="space-y-1.5">
-                <label className="text-sm text-bolt-elements-textSecondary">
-                  {envBaseUrl ? 'URL personnalisée' : 'URL du service'} :
-                </label>
                 <input
                   type="text"
                   value={provider.settings.baseUrl || ''}
                   onChange={(e) => {
                     const newBaseUrl = e.target.value.trim() || undefined;
-                    updateProviderSettings(provider.name, {
-                      ...provider.settings,
-                      baseUrl: newBaseUrl
-                    });
-                    logStore.logProvider(`Base URL updated for ${provider.name}`, {
+                    updateProviderSettings(provider.name, { ...provider.settings, baseUrl: newBaseUrl });
+                    logStore.logProvider(`Configuration URL: ${provider.name}`, {
                       provider: provider.name,
                       baseUrl: newBaseUrl,
                     });
                   }}
-                  placeholder={`Entrez l'URL pour ${provider.name}`}
-                  className={`
-                    w-full px-3 py-2 rounded-lg transition-all duration-200
-                    bg-bolt-elements-background-depth-3
-                    border border-bolt-elements-borderColor
-                    focus:border-bolt-elements-focus focus:ring-1 focus:ring-bolt-elements-focus
-                    text-bolt-elements-textPrimary placeholder:text-bolt-elements-textTertiary
-                  `}
+                  placeholder={`URL pour ${provider.name}`}
+                  className="w-full bg-white dark:bg-bolt-elements-background-depth-4 px-2 py-1.5 text-xs rounded focus:outline-none focus:ring-1 focus:ring-bolt-elements-focus placeholder-bolt-elements-textTertiary text-bolt-elements-textPrimary border border-bolt-elements-borderColor"
                 />
               </div>
-            </div>
-          )}
-        </div>
-      </motion.div>
+            )}
+          </div>
+        )}
+      </div>
     );
   };
 
-  const regularProviders = filteredProviders.filter(p => !URL_CONFIGURABLE_PROVIDERS.includes(p.name));
-  const urlConfigurableProviders = filteredProviders.filter(p => URL_CONFIGURABLE_PROVIDERS.includes(p.name));
+  const regularProviders = filteredProviders.filter((p) => !URL_CONFIGURABLE_PROVIDERS.includes(p.name));
+  const urlConfigurableProviders = filteredProviders.filter((p) => URL_CONFIGURABLE_PROVIDERS.includes(p.name));
 
   return (
-    <div className="p-6 space-y-8">
-      <div className="relative">
-        <input
-          type="search"
-          placeholder="Rechercher des fournisseurs..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={`
-            w-full pl-10 pr-4 py-2.5 rounded-xl transition-all duration-200
-            bg-bolt-elements-background-depth-3
-            border border-bolt-elements-borderColor
-            focus:border-bolt-elements-focus focus:ring-1 focus:ring-bolt-elements-focus
-            text-bolt-elements-textPrimary placeholder:text-bolt-elements-textTertiary
-          `}
-        />
-        <div className="absolute left-3.5 top-3 text-bolt-elements-textTertiary">
-          <div className="i-ph:magnifying-glass" />
+    <div className="space-y-4 p-4">
+      <div className="bg-bolt-elements-bg-depth-2 border border-bolt-elements-borderColor rounded-lg p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-2">
+            <CloudIcon className="w-5 h-5 text-bolt-elements-textSecondary" />
+            <h3 className="text-lg font-semibold text-bolt-elements-textPrimary">Fournisseurs</h3>
+          </div>
+          <div className="relative flex-grow max-w-sm">
+            <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+              <MagnifyingGlassIcon className="h-4 w-4 text-bolt-elements-textTertiary" />
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white dark:bg-bolt-elements-background-depth-4 pl-8 pr-3 py-1.5 text-sm rounded focus:outline-none focus:ring-1 focus:ring-bolt-elements-focus placeholder-bolt-elements-textTertiary text-bolt-elements-textPrimary border border-bolt-elements-borderColor"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {regularProviders.map(renderProviderCard)}
         </div>
       </div>
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="space-y-8"
-      >
-        {regularProviders.length > 0 && (
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-bolt-elements-textPrimary">
-              Fournisseurs standards
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {regularProviders.map(renderProviderCard)}
+      {urlConfigurableProviders.length > 0 && (
+        <div className="bg-bolt-elements-bg-depth-2 border border-bolt-elements-borderColor rounded-lg p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <BeakerIcon className="w-5 h-5 text-amber-500" />
+            <div>
+              <h3 className="text-lg font-semibold text-bolt-elements-textPrimary">Expérimental</h3>
+              <p className="text-xs text-amber-500">Configuration avancée requise</p>
             </div>
-          </section>
-        )}
-
-        {urlConfigurableProviders.length > 0 && (
-          <section>
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-bolt-elements-textPrimary">
-                Fournisseurs expérimentaux
-              </h2>
-              <p className="mt-2 text-sm text-bolt-elements-textSecondary">
-                Ces fournisseurs sont expérimentaux et vous permettent d'exécuter des modèles
-                d'IA localement ou de vous connecter à votre propre infrastructure.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              {urlConfigurableProviders.map(renderProviderCard)}
-            </div>
-          </section>
-        )}
-
-        {filteredProviders.length === 0 && (
-          <div className="text-center py-12 text-bolt-elements-textSecondary">
-            Aucun fournisseur trouvé pour "{searchTerm}"
           </div>
-        )}
-      </motion.div>
+
+          <div className="space-y-2">
+            {urlConfigurableProviders.map(renderProviderCard)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

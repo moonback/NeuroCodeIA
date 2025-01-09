@@ -25,7 +25,22 @@ export interface ChatHistoryItem {
 
 const persistenceEnabled = !import.meta.env.VITE_DISABLE_PERSISTENCE;
 
-export const db = persistenceEnabled ? await openDatabase() : undefined;
+export let db: IDBDatabase | undefined;
+
+// Initialize database with error handling
+(async () => {
+  if (persistenceEnabled) {
+    try {
+      db = await openDatabase();
+      if (!db) {
+        throw new Error('Failed to initialize database');
+      }
+    } catch (error) {
+      logStore.logError('Database initialization error', error);
+      toast.error('Chat history may be unavailable. Please refresh the page to try again.');
+    }
+  }
+})();
 
 export const chatId = atom<string | undefined>(undefined);
 export const description = atom<string | undefined>(undefined);
@@ -38,17 +53,24 @@ export function useChatHistory() {
   const [initialMessages, setInitialMessages] = useState<Message[]>([]);
   const [ready, setReady] = useState<boolean>(false);
   const [urlId, setUrlId] = useState<string | undefined>();
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!db) {
-      setReady(true);
-
-      if (persistenceEnabled) {
-        const error = new Error('Chat persistence is unavailable');
-        logStore.logError('Chat persistence initialization failed', error);
-        toast.error('Chat persistence is unavailable');
+      // If database isn't ready yet and we haven't exceeded retry attempts
+      if (persistenceEnabled && retryCount < 3) {
+        const timer = setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+        }, 1000); // Wait 1 second before retry
+        return () => clearTimeout(timer);
       }
-
+      
+      setReady(true);
+      if (persistenceEnabled) {
+        const error = new Error('Chat persistence initialization failed after retries');
+        logStore.logError('Chat persistence initialization failed', error);
+        toast.error('Chat persistence is unavailable. Some features may be limited.');
+      }
       return;
     }
 

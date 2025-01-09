@@ -2,6 +2,17 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSettings } from '~/lib/hooks/useSettings';
 import { toast } from 'react-toastify';
 import { providerBaseUrlEnvKeys } from '~/utils/constants';
+import {
+  BugAntIcon,
+  ComputerDesktopIcon,
+  ArrowPathIcon,
+  ClipboardDocumentIcon,
+  ServerIcon,
+  CircleStackIcon,
+  GlobeAltIcon,
+  CpuChipIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 
 interface ProviderStatus {
   name: string;
@@ -56,8 +67,25 @@ const versionTag = connitJson.version;
 const GITHUB_URLS = {
   original: 'https://api.github.com/repos/stackblitz-labs/bolt.diy/commits/main',
   fork: 'https://api.github.com/repos/Stijnus/bolt.new-any-llm/commits/main',
-  commitJson: (branch: string) =>
-    `https://raw.githubusercontent.com/stackblitz-labs/bolt.diy/${branch}/app/commit.json`,
+  commitJson: async (branch: string) => {
+    try {
+      const response = await fetch(`https://api.github.com/repos/stackblitz-labs/bolt.diy/commits/${branch}`);
+      const data: { sha: string } = await response.json();
+
+      const packageJsonResp = await fetch(
+        `https://raw.githubusercontent.com/stackblitz-labs/bolt.diy/${branch}/package.json`,
+      );
+      const packageJson: { version: string } = await packageJsonResp.json();
+
+      return {
+        commit: data.sha.slice(0, 7),
+        version: packageJson.version,
+      };
+    } catch (error) {
+      console.log('Failed to fetch local commit info:', error);
+      throw new Error('Failed to fetch local commit info');
+    }
+  },
 };
 
 function getSystemInfo(): SystemInfo {
@@ -373,14 +401,9 @@ export default function DebugTab() {
       const branchToCheck = isLatestBranch ? 'main' : 'stable';
       console.log(`[Debug] Checking for updates against ${branchToCheck} branch`);
 
-      const localCommitResponse = await fetch(GITHUB_URLS.commitJson(branchToCheck));
+      const latestCommitResp = await GITHUB_URLS.commitJson(branchToCheck);
 
-      if (!localCommitResponse.ok) {
-        throw new Error('Failed to fetch local commit info');
-      }
-
-      const localCommitData = (await localCommitResponse.json()) as CommitData;
-      const remoteCommitHash = localCommitData.commit;
+      const remoteCommitHash = latestCommitResp.commit;
       const currentCommitHash = versionHash;
 
       if (remoteCommitHash !== currentCommitHash) {
@@ -402,226 +425,252 @@ export default function DebugTab() {
 
   const handleCopyToClipboard = useCallback(() => {
     const debugInfo = {
-      System: systemInfo,
-      Providers: activeProviders.map((provider) => ({
-        name: provider.name,
-        enabled: provider.enabled,
-        isLocal: provider.isLocal,
-        running: provider.isRunning,
-        error: provider.error,
-        lastChecked: provider.lastChecked,
-        responseTime: provider.responseTime,
+      Système: systemInfo,
+      Fournisseurs: activeProviders.map((provider) => ({
+        nom: provider.name,
+        activé: provider.enabled,
+        local: provider.isLocal,
+        enFonctionnement: provider.isRunning,
+        erreur: provider.error,
+        dernièreVérification: provider.lastChecked,
+        tempsRéponse: provider.responseTime,
         url: provider.url,
       })),
       Version: {
         hash: versionHash.slice(0, 7),
-        branch: isLatestBranch ? 'main' : 'stable',
+        branche: isLatestBranch ? 'principale' : 'stable',
       },
-      Timestamp: new Date().toISOString(),
+      Horodatage: new Date().toLocaleString('fr-FR'),
     };
 
     navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => {
-      toast.success('Debug information copied to clipboard!');
+      toast.success('Informations de débogage copiées !');
     });
   }, [activeProviders, systemInfo, isLatestBranch]);
 
   return (
-    <div className="p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-bolt-elements-textPrimary">Debug Information</h3>
-        <div className="flex gap-2">
-          <button
-            onClick={handleCopyToClipboard}
-            className="bg-bolt-elements-button-primary-background rounded-lg px-4 py-2 transition-colors duration-200 hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text"
-          >
-            Copy Debug Info
-          </button>
-          <button
-            onClick={handleCheckForUpdate}
-            disabled={isCheckingUpdate}
-            className={`bg-bolt-elements-button-primary-background rounded-lg px-4 py-2 transition-colors duration-200
-              ${!isCheckingUpdate ? 'hover:bg-bolt-elements-button-primary-backgroundHover' : 'opacity-75 cursor-not-allowed'}
-              text-bolt-elements-button-primary-text`}
-          >
-            {isCheckingUpdate ? 'Checking...' : 'Check for Updates'}
-          </button>
+    <div className="space-y-4 p-4">
+      {/* En-tête */}
+      <div className="bg-bolt-elements-bg-depth-2 border border-bolt-elements-borderColor rounded-lg p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BugAntIcon className="w-5 h-5 text-bolt-elements-textSecondary" />
+            <h3 className="text-lg font-semibold text-bolt-elements-textPrimary">Débogage</h3>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleCopyToClipboard}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-bolt-elements-button-primary-background rounded-lg transition-colors hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-button-primary-text"
+            >
+              <ClipboardDocumentIcon className="w-4 h-4" />
+              Copier les infos
+            </button>
+            <button
+              onClick={handleCheckForUpdate}
+              disabled={isCheckingUpdate}
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm bg-bolt-elements-button-primary-background rounded-lg transition-colors
+                ${!isCheckingUpdate ? 'hover:bg-bolt-elements-button-primary-backgroundHover' : 'opacity-75 cursor-not-allowed'}
+                text-bolt-elements-button-primary-text`}
+            >
+              <ArrowPathIcon className={`w-4 h-4 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
+              {isCheckingUpdate ? 'Vérification...' : 'Vérifier les mises à jour'}
+            </button>
+          </div>
+        </div>
+
+        {/* Message de mise à jour */}
+        {updateMessage && (
+          <div className={`rounded-lg p-3 ${
+            updateMessage.includes('disponible') 
+              ? 'bg-amber-50 border-l-4 border-amber-400 dark:bg-amber-500/10' 
+              : 'bg-bolt-elements-surface'
+          }`}>
+            <p className="text-sm text-bolt-elements-textSecondary whitespace-pre-line">{updateMessage}</p>
+            {updateMessage.includes('disponible') && (
+              <div className="mt-3 text-sm">
+                <p className="font-medium text-bolt-elements-textPrimary">Pour mettre à jour :</p>
+                <ol className="list-decimal ml-4 mt-1 space-y-1 text-bolt-elements-textSecondary">
+                  <li>
+                    Récupérer les changements :
+                    <code className="ml-2 px-2 py-0.5 rounded bg-bolt-elements-surface-hover font-mono text-xs">
+                      git pull upstream main
+                    </code>
+                  </li>
+                  <li>
+                    Installer les dépendances :
+                    <code className="ml-2 px-2 py-0.5 rounded bg-bolt-elements-surface-hover font-mono text-xs">
+                      pnpm install
+                    </code>
+                  </li>
+                  <li>Redémarrer l'application</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Informations Système */}
+      <div className="bg-bolt-elements-bg-depth-2 border border-bolt-elements-borderColor rounded-lg p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <ComputerDesktopIcon className="w-5 h-5 text-bolt-elements-textSecondary" />
+          <h3 className="text-lg font-semibold text-bolt-elements-textPrimary">Informations Système</h3>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <InfoCard
+            icon={<CircleStackIcon className="w-4 h-4" />}
+            label="Système d'exploitation"
+            value={systemInfo.os}
+          />
+          <InfoCard
+            icon={<GlobeAltIcon className="w-4 h-4" />}
+            label="Navigateur"
+            value={systemInfo.browser}
+          />
+          <InfoCard
+            icon={<ComputerDesktopIcon className="w-4 h-4" />}
+            label="Affichage"
+            value={`${systemInfo.screen} (${systemInfo.colorDepth})`}
+          />
+          <InfoCard
+            icon={<ServerIcon className="w-4 h-4" />}
+            label="Connexion"
+            value={
+              <span className="flex items-center gap-2">
+                <span className={`inline-block w-2 h-2 rounded-full ${systemInfo.online ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span className={systemInfo.online ? 'text-green-600' : 'text-red-600'}>
+                  {systemInfo.online ? 'En ligne' : 'Hors ligne'}
+                </span>
+              </span>
+            }
+          />
+          <InfoCard
+            icon={<CpuChipIcon className="w-4 h-4" />}
+            label="Processeur"
+            value={`${systemInfo.cores} cœurs`}
+          />
+          <InfoCard
+            icon={<ClockIcon className="w-4 h-4" />}
+            label="Fuseau horaire"
+            value={systemInfo.timezone}
+          />
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-bolt-elements-borderColor">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-bolt-elements-textSecondary">Version</span>
+              <code className="px-2 py-0.5 rounded bg-bolt-elements-surface-hover text-xs font-mono">
+                {versionHash.slice(0, 7)}
+              </code>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-bolt-elements-textTertiary">
+                v{versionTag || '0.0.1'}
+              </span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                isLatestBranch ? 'bg-amber-500/10 text-amber-500' : 'bg-green-500/10 text-green-500'
+              }`}>
+                {isLatestBranch ? 'développement' : 'stable'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {updateMessage && (
-        <div
-          className={`bg-bolt-elements-surface rounded-lg p-3 ${
-            updateMessage.includes('Update available') ? 'border-l-4 border-yellow-400' : ''
-          }`}
-        >
-          <p className="text-bolt-elements-textSecondary whitespace-pre-line">{updateMessage}</p>
-          {updateMessage.includes('Update available') && (
-            <div className="mt-3 text-sm">
-              <p className="font-medium text-bolt-elements-textPrimary">To update:</p>
-              <ol className="list-decimal ml-4 mt-1 text-bolt-elements-textSecondary">
-                <li>
-                  Pull the latest changes:{' '}
-                  <code className="bg-bolt-elements-surface-hover px-1 rounded">git pull upstream main</code>
-                </li>
-                <li>
-                  Install any new dependencies:{' '}
-                  <code className="bg-bolt-elements-surface-hover px-1 rounded">pnpm install</code>
-                </li>
-                <li>Restart the application</li>
-              </ol>
-            </div>
-          )}
-        </div>
-      )}
-
-      <section className="space-y-4">
-        <div>
-          <h4 className="text-md font-medium text-bolt-elements-textPrimary mb-2">System Information</h4>
-          <div className="bg-bolt-elements-surface rounded-lg p-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Operating System</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{systemInfo.os}</p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Device Type</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{systemInfo.deviceType}</p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Browser</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{systemInfo.browser}</p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Display</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">
-                  {systemInfo.screen} ({systemInfo.colorDepth}) @{systemInfo.pixelRatio}x
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Connection</p>
-                <p className="text-sm font-medium flex items-center gap-2">
-                  <span
-                    className={`inline-block w-2 h-2 rounded-full ${systemInfo.online ? 'bg-green-500' : 'bg-red-500'}`}
-                  />
-                  <span className={`${systemInfo.online ? 'text-green-600' : 'text-red-600'}`}>
-                    {systemInfo.online ? 'Online' : 'Offline'}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Screen Resolution</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{systemInfo.screen}</p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Language</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{systemInfo.language}</p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">Timezone</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{systemInfo.timezone}</p>
-              </div>
-              <div>
-                <p className="text-xs text-bolt-elements-textSecondary">CPU Cores</p>
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{systemInfo.cores}</p>
-              </div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-bolt-elements-surface-hover">
-              <p className="text-xs text-bolt-elements-textSecondary">Version</p>
-              <p className="text-sm font-medium text-bolt-elements-textPrimary font-mono">
-                {connitJson.commit.slice(0, 7)}
-                <span className="ml-2 text-xs text-bolt-elements-textSecondary">
-                  (v{versionTag || '0.0.1'}) - {isLatestBranch ? 'nightly' : 'stable'}
-                </span>
-              </p>
-            </div>
-          </div>
+      {/* État des Modèles Locaux */}
+      <div className="bg-bolt-elements-bg-depth-2 border border-bolt-elements-borderColor rounded-lg p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <ServerIcon className="w-5 h-5 text-bolt-elements-textSecondary" />
+          <h3 className="text-lg font-semibold text-bolt-elements-textPrimary">État des Modèles Locaux</h3>
         </div>
 
-        <div>
-          <h4 className="text-md font-medium text-bolt-elements-textPrimary mb-2">Local LLM Status</h4>
-          <div className="bg-bolt-elements-surface rounded-lg">
-            <div className="grid grid-cols-1 divide-y">
-              {activeProviders.map((provider) => (
-                <div key={provider.name} className="p-3 flex flex-col space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            !provider.enabled ? 'bg-gray-300' : provider.isRunning ? 'bg-green-400' : 'bg-red-400'
-                          }`}
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-bolt-elements-textPrimary">{provider.name}</p>
-                        {provider.url && (
-                          <p className="text-xs text-bolt-elements-textSecondary truncate max-w-[300px]">
-                            {provider.url}
-                          </p>
+        <div className="divide-y divide-bolt-elements-borderColor">
+          {activeProviders.map((provider) => (
+            <div key={provider.name} className="py-3 first:pt-0 last:pb-0">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-7 h-7 rounded-md bg-bolt-elements-bg-depth-1 p-1 flex items-center justify-center">
+                      <img
+                        src={`/icons/${provider.name}.svg`}
+                        onError={(e) => {
+                          e.currentTarget.src = '/icons/Default.svg';
+                        }}
+                        alt={provider.name}
+                        className="w-5 h-5 dark:invert"
+                      />
+                    </div>
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-bolt-elements-bg-depth-2 ${
+                      !provider.enabled ? 'bg-gray-400' 
+                      : provider.isRunning ? 'bg-green-500' 
+                      : 'bg-red-500'
+                    }`} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-bolt-elements-textPrimary">
+                        {provider.name}
+                      </span>
+                      <div className="flex gap-1.5">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                          provider.enabled ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'
+                        }`}>
+                          {provider.enabled ? 'Activé' : 'Désactivé'}
+                        </span>
+                        {provider.enabled && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                            provider.isRunning ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                          }`}>
+                            {provider.isRunning ? 'En ligne' : 'Hors ligne'}
+                          </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2 py-0.5 text-xs rounded-full ${
-                          provider.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {provider.enabled ? 'Enabled' : 'Disabled'}
-                      </span>
-                      {provider.enabled && (
-                        <span
-                          className={`px-2 py-0.5 text-xs rounded-full ${
-                            provider.isRunning ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {provider.isRunning ? 'Running' : 'Not Running'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="pl-5 flex flex-col space-y-1 text-xs">
-                    {/* Status Details */}
-                    <div className="flex flex-wrap gap-2">
-                      <span className="text-bolt-elements-textSecondary">
-                        Last checked: {new Date(provider.lastChecked).toLocaleTimeString()}
-                      </span>
-                      {provider.responseTime && (
-                        <span className="text-bolt-elements-textSecondary">
-                          Response time: {Math.round(provider.responseTime)}ms
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Error Message */}
-                    {provider.error && (
-                      <div className="mt-1 text-red-600 bg-red-50 rounded-md p-2">
-                        <span className="font-medium">Error:</span> {provider.error}
-                      </div>
-                    )}
-
-                    {/* Connection Info */}
                     {provider.url && (
-                      <div className="text-bolt-elements-textSecondary">
-                        <span className="font-medium">Endpoints checked:</span>
-                        <ul className="list-disc list-inside pl-2 mt-1">
-                          <li>{provider.url} (root)</li>
-                          <li>{provider.url}/api/health</li>
-                          <li>{provider.url}/v1/models</li>
-                        </ul>
-                      </div>
+                      <p className="text-xs text-bolt-elements-textTertiary mt-0.5 truncate max-w-[300px]">
+                        {provider.url}
+                      </p>
                     )}
                   </div>
                 </div>
-              ))}
-              {activeProviders.length === 0 && (
-                <div className="p-4 text-center text-bolt-elements-textSecondary">No local LLMs configured</div>
+                <div className="text-right text-xs text-bolt-elements-textTertiary">
+                  <div>Dernière vérification : {new Date(provider.lastChecked).toLocaleTimeString('fr-FR')}</div>
+                  {provider.responseTime && (
+                    <div>Temps de réponse : {Math.round(provider.responseTime)}ms</div>
+                  )}
+                </div>
+              </div>
+
+              {provider.error && (
+                <div className="mt-2 text-xs text-red-600 bg-red-50 dark:bg-red-500/10 rounded-md p-2">
+                  <span className="font-medium">Erreur :</span> {provider.error}
+                </div>
               )}
             </div>
-          </div>
+          ))}
+          {activeProviders.length === 0 && (
+            <div className="py-8 text-center text-bolt-elements-textTertiary">
+              Aucun modèle local configuré
+            </div>
+          )}
         </div>
-      </section>
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1.5">
+        <span className="text-bolt-elements-textTertiary">{icon}</span>
+        <span className="text-xs text-bolt-elements-textSecondary">{label}</span>
+      </div>
+      <div className="text-sm font-medium text-bolt-elements-textPrimary">
+        {value}
+      </div>
     </div>
   );
 }

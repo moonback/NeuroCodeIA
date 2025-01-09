@@ -16,35 +16,40 @@ export const ImportFolderButton: React.FC<ImportFolderButtonProps> = ({ classNam
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const allFiles = Array.from(e.target.files || []);
 
-    if (allFiles.length > MAX_FILES) {
-      const error = new Error(`Too many files: ${allFiles.length}`);
-      logStore.logError('File import failed - too many files', error, {
-        fileCount: allFiles.length,
+    const filteredFiles = allFiles.filter((file) => {
+      const path = file.webkitRelativePath.split('/').slice(1).join('/');
+      const include = shouldIncludeFile(path);
+
+      return include;
+    });
+
+    if (filteredFiles.length === 0) {
+      const error = new Error('Aucun fichier valide trouvé');
+      logStore.logError('Échec de l\'importation - aucun fichier valide', error, { folderName: 'Dossier inconnu' });
+      toast.error('Aucun fichier trouvé dans le dossier sélectionné');
+
+      return;
+    }
+
+    if (filteredFiles.length > MAX_FILES) {
+      const error = new Error(`Trop de fichiers : ${filteredFiles.length}`);
+      logStore.logError('Échec de l\'importation - trop de fichiers', error, {
+        fileCount: filteredFiles.length,
         maxFiles: MAX_FILES,
       });
       toast.error(
-        `This folder contains ${allFiles.length.toLocaleString()} files. This product is not yet optimized for very large projects. Please select a folder with fewer than ${MAX_FILES.toLocaleString()} files.`,
+        `Ce dossier contient ${filteredFiles.length.toLocaleString()} fichiers. Ce produit n'est pas encore optimisé pour les très grands projets. Veuillez sélectionner un dossier contenant moins de ${MAX_FILES.toLocaleString()} fichiers.`,
       );
 
       return;
     }
 
-    const folderName = allFiles[0]?.webkitRelativePath.split('/')[0] || 'Unknown Folder';
+    const folderName = filteredFiles[0]?.webkitRelativePath.split('/')[0] || 'Unknown Folder';
     setIsLoading(true);
 
-    const loadingToast = toast.loading(`Importing ${folderName}...`);
+    const loadingToast = toast.loading(`Importation de ${folderName}...`);
 
     try {
-      const filteredFiles = allFiles.filter((file) => shouldIncludeFile(file.webkitRelativePath));
-
-      if (filteredFiles.length === 0) {
-        const error = new Error('No valid files found');
-        logStore.logError('File import failed - no valid files', error, { folderName });
-        toast.error('No files found in the selected folder');
-
-        return;
-      }
-
       const fileChecks = await Promise.all(
         filteredFiles.map(async (file) => ({
           file,
@@ -58,19 +63,19 @@ export const ImportFolderButton: React.FC<ImportFolderButtonProps> = ({ classNam
         .map((f) => f.file.webkitRelativePath.split('/').slice(1).join('/'));
 
       if (textFiles.length === 0) {
-        const error = new Error('No text files found');
-        logStore.logError('File import failed - no text files', error, { folderName });
-        toast.error('No text files found in the selected folder');
+        const error = new Error('Aucun fichier texte trouvé');
+        logStore.logError('Échec de l\'importation - aucun fichier texte', error, { folderName });
+        toast.error('Aucun fichier texte trouvé dans le dossier sélectionné');
 
         return;
       }
 
       if (binaryFilePaths.length > 0) {
-        logStore.logWarning(`Skipping binary files during import`, {
+        logStore.logWarning(`Fichiers binaires ignorés pendant l'importation`, {
           folderName,
           binaryCount: binaryFilePaths.length,
         });
-        toast.info(`Skipping ${binaryFilePaths.length} binary files`);
+        toast.info(`${binaryFilePaths.length} fichiers binaires ignorés`);
       }
 
       const messages = await createChatFromFolder(textFiles, binaryFilePaths, folderName);
@@ -79,16 +84,16 @@ export const ImportFolderButton: React.FC<ImportFolderButtonProps> = ({ classNam
         await importChat(folderName, [...messages]);
       }
 
-      logStore.logSystem('Folder imported successfully', {
+      logStore.logSystem('Dossier importé avec succès', {
         folderName,
         textFileCount: textFiles.length,
         binaryFileCount: binaryFilePaths.length,
       });
-      toast.success('Folder imported successfully');
+      toast.success('Dossier importé avec succès');
     } catch (error) {
-      logStore.logError('Failed to import folder', error, { folderName });
-      console.error('Failed to import folder:', error);
-      toast.error('Failed to import folder');
+      logStore.logError('Échec de l\'importation du dossier', error, { folderName });
+      console.error('Échec de l\'importation du dossier:', error);
+      toast.error('Échec de l\'importation du dossier');
     } finally {
       setIsLoading(false);
       toast.dismiss(loadingToast);
@@ -116,7 +121,7 @@ export const ImportFolderButton: React.FC<ImportFolderButtonProps> = ({ classNam
         disabled={isLoading}
       >
         <div className="i-ph:upload-simple" />
-        {isLoading ? 'Importation...' : 'Importer un Dossier'}
+        {isLoading ? 'Importation...' : 'Importer un dossier'}
       </button>
     </>
   );

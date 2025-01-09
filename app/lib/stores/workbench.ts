@@ -18,6 +18,9 @@ import { description } from '~/lib/persistence';
 import Cookies from 'js-cookie';
 import { createSampler } from '~/utils/sampler';
 import type { ActionAlert } from '~/types/actions';
+import { createScopedLogger } from '~/utils/logger';
+
+const logger = createScopedLogger('WorkbenchStore');
 
 export interface ArtifactState {
   id: string;
@@ -47,7 +50,7 @@ export class WorkbenchStore {
   currentView: WritableAtom<WorkbenchViewType> = import.meta.hot?.data.currentView ?? atom('code');
   unsavedFiles: WritableAtom<Set<string>> = import.meta.hot?.data.unsavedFiles ?? atom(new Set<string>());
   actionAlert: WritableAtom<ActionAlert | undefined> =
-    import.meta.hot?.data.unsavedFiles ?? atom<ActionAlert | undefined>(undefined);
+    import.meta.hot?.data.actionAlert ?? atom<ActionAlert | undefined>(undefined);
   modifiedFiles = new Set<string>();
   artifactIdList: string[] = [];
   #globalExecutionQueue = Promise.resolve();
@@ -185,19 +188,21 @@ export class WorkbenchStore {
   }
 
   async saveFile(filePath: string) {
-    const documents = this.#editorStore.documents.get();
-    const document = documents[filePath];
+    const doc = this.#editorStore.documents.get()[filePath];
 
-    if (document === undefined) {
+    if (!doc) {
       return;
     }
 
-    await this.#filesStore.saveFile(filePath, document.value);
-
-    const newUnsavedFiles = new Set(this.unsavedFiles.get());
-    newUnsavedFiles.delete(filePath);
-
-    this.unsavedFiles.set(newUnsavedFiles);
+    try {
+      await this.#filesStore.saveFile(filePath, doc.value);
+      this.unsavedFiles.set(new Set([...this.unsavedFiles.get()].filter((f) => f !== filePath)));
+      
+      // On attend la fin de la sauvegarde avant de vérifier les modifications
+      await this.checkAndNotifyModifications();
+    } catch (error) {
+      logger.error('Failed to save file\n\n', error);
+    }
   }
 
   async saveCurrentDocument() {
@@ -228,8 +233,45 @@ export class WorkbenchStore {
   }
 
   async saveAllFiles() {
-    for (const filePath of this.unsavedFiles.get()) {
-      await this.saveFile(filePath);
+    const unsavedFiles = [...this.unsavedFiles.get()];
+    for (const filePath of unsavedFiles) {
+      const doc = this.#editorStore.documents.get()[filePath];
+      if (doc) {
+        try {
+          await this.#filesStore.saveFile(filePath, doc.value);
+        } catch (error) {
+          logger.error(`Failed to save file ${filePath}\n\n`, error);
+        }
+      }
+    }
+    
+    // Réinitialiser la liste des fichiers non sauvegardés
+    this.unsavedFiles.set(new Set());
+    
+    // Vérifier les modifications après avoir sauvegardé tous les fichiers
+    await this.checkAndNotifyModifications();
+  }
+
+  private async checkAndNotifyModifications() {
+    // Récupérer toutes les modifications de fichiers
+    const fileModifications = this.#filesStore.getFileModifications();
+    if (fileModifications && Object.keys(fileModifications).length > 0) {
+      // Créer une description avec tous les fichiers modifiés
+      const modifiedFiles = Object.entries(fileModifications)
+        .map(([path, modification]) => ({ path, ...modification }));
+      
+      // Créer un contenu combiné avec toutes les modifications
+      const combinedContent = modifiedFiles
+        .map(file => `=== ${file.path} ===\n${file.content}`)
+        .join('\n\n');
+
+      this.actionAlert.set({
+        type: 'info',
+        title: 'Modifications de Fichiers',
+        description: modifiedFiles.map(f => f.path).join('\n'),
+        content: combinedContent,
+        source: 'file_modification'
+      });
     }
   }
 

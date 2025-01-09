@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from '@remix-run/react';
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
-import { db, deleteById, getAll } from '~/lib/persistence';
+import { db, deleteById, getAll, setMessages } from '~/lib/persistence';
 import { logStore } from '~/lib/stores/logs';
 import { classNames } from '~/utils/classNames';
-import styles from '~/components/settings/Settings.module.scss';
+import type { Message } from 'ai';
 
-// List of supported providers that can have API keys
+// Liste des fournisseurs supportés qui peuvent avoir des clés API
 const API_KEY_PROVIDERS = [
   'Anthropic',
-  'OpenAI',
+  'OpenAI', 
   'Google',
   'Groq',
   'HuggingFace',
@@ -23,9 +23,8 @@ const API_KEY_PROVIDERS = [
   'Perplexity',
   'Cohere',
   'AzureOpenAI',
+  'AmazonBedrock',
 ] as const;
-
-type Provider = typeof API_KEY_PROVIDERS[number];
 
 interface ApiKeys {
   [key: string]: string;
@@ -49,9 +48,10 @@ export default function DataTab() {
 
   const handleExportAllChats = async () => {
     if (!db) {
-      const error = new Error('Database is not available');
-      logStore.logError('Failed to export chats - DB unavailable', error);
-      toast.error('Database is not available');
+      const error = new Error('La base de données n\'est pas disponible');
+      logStore.logError('Échec de l\'exportation des conversations - BDD indisponible', error);
+      toast.error('La base de données n\'est pas disponible');
+
       return;
     }
 
@@ -62,40 +62,42 @@ export default function DataTab() {
         exportDate: new Date().toISOString(),
       };
 
-      downloadAsJson(exportData, `all-chats-${new Date().toISOString()}.json`);
-      logStore.logSystem('Chats exported successfully', { count: allChats.length });
-      toast.success('Chats exported successfully');
+      downloadAsJson(exportData, `toutes-conversations-${new Date().toISOString()}.json`);
+      logStore.logSystem('Conversations exportées avec succès', { count: allChats.length });
+      toast.success('Conversations exportées avec succès');
     } catch (error) {
-      logStore.logError('Failed to export chats', error);
-      toast.error('Failed to export chats');
+      logStore.logError('Échec de l\'exportation des conversations', error);
+      toast.error('Échec de l\'exportation des conversations');
       console.error(error);
     }
   };
 
   const handleDeleteAllChats = async () => {
-    const confirmDelete = window.confirm('Are you sure you want to delete all chats? This action cannot be undone.');
+    const confirmDelete = window.confirm('Êtes-vous sûr de vouloir supprimer toutes les conversations ? Cette action est irréversible.');
 
     if (!confirmDelete) {
       return;
     }
 
     if (!db) {
-      const error = new Error('Database is not available');
-      logStore.logError('Failed to delete chats - DB unavailable', error);
-      toast.error('Database is not available');
+      const error = new Error('La base de données n\'est pas disponible');
+      logStore.logError('Échec de la suppression des conversations - BDD indisponible', error);
+      toast.error('La base de données n\'est pas disponible');
+
       return;
     }
 
     try {
       setIsDeleting(true);
+
       const allChats = await getAll(db);
       await Promise.all(allChats.map((chat) => deleteById(db!, chat.id)));
-      logStore.logSystem('All chats deleted successfully', { count: allChats.length });
-      toast.success('All chats deleted successfully');
+      logStore.logSystem('Toutes les conversations ont été supprimées avec succès', { count: allChats.length });
+      toast.success('Toutes les conversations ont été supprimées avec succès');
       navigate('/', { replace: true });
     } catch (error) {
-      logStore.logError('Failed to delete chats', error);
-      toast.error('Failed to delete chats');
+      logStore.logError('Échec de la suppression des conversations', error);
+      toast.error('Échec de la suppression des conversations');
       console.error(error);
     } finally {
       setIsDeleting(false);
@@ -119,31 +121,37 @@ export default function DataTab() {
       bolt_theme: localStorage.getItem('bolt_theme'),
     };
 
-    downloadAsJson(settings, 'bolt-settings.json');
-    toast.success('Settings exported successfully');
+    downloadAsJson(settings, 'bolt-parametres.json');
+    toast.success('Paramètres exportés avec succès');
   };
 
   const handleImportSettings = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+
+    if (!file) {
+      return;
+    }
 
     const reader = new FileReader();
+
     reader.onload = (e) => {
       try {
         const settings = JSON.parse(e.target?.result as string);
 
         Object.entries(settings).forEach(([key, value]) => {
           if (key === 'bolt_theme') {
-            if (value) localStorage.setItem(key, value as string);
+            if (value) {
+              localStorage.setItem(key, value as string);
+            }
           } else if (value) {
             Cookies.set(key, value as string);
           }
         });
 
-        toast.success('Settings imported successfully. Please refresh the page for changes to take effect.');
+        toast.success('Paramètres importés avec succès. Veuillez rafraîchir la page pour appliquer les changements.');
       } catch (error) {
-        toast.error('Failed to import settings. Make sure the file is a valid JSON file.');
-        console.error('Failed to import settings:', error);
+        toast.error('Échec de l\'importation des paramètres. Assurez-vous que le fichier est un fichier JSON valide.');
+        console.error('Échec de l\'importation des paramètres:', error);
       }
     };
     reader.readAsText(file);
@@ -152,32 +160,37 @@ export default function DataTab() {
 
   const handleExportApiKeyTemplate = () => {
     const template: ApiKeys = {};
-    API_KEY_PROVIDERS.forEach(provider => {
+    API_KEY_PROVIDERS.forEach((provider) => {
       template[`${provider}_API_KEY`] = '';
     });
 
-    template['OPENAI_LIKE_API_BASE_URL'] = '';
-    template['LMSTUDIO_API_BASE_URL'] = '';
-    template['OLLAMA_API_BASE_URL'] = '';
-    template['TOGETHER_API_BASE_URL'] = '';
+    template.OPENAI_LIKE_API_BASE_URL = '';
+    template.LMSTUDIO_API_BASE_URL = '';
+    template.OLLAMA_API_BASE_URL = '';
+    template.TOGETHER_API_BASE_URL = '';
 
-    downloadAsJson(template, 'api-keys-template.json');
-    toast.success('API keys template exported successfully');
+    downloadAsJson(template, 'modele-cles-api.json');
+    toast.success('Modèle de clés API exporté avec succès');
   };
 
   const handleImportApiKeys = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+
+    if (!file) {
+      return;
+    }
 
     const reader = new FileReader();
+
     reader.onload = (e) => {
       try {
         const apiKeys = JSON.parse(e.target?.result as string);
         let importedCount = 0;
         const consolidatedKeys: Record<string, string> = {};
 
-        API_KEY_PROVIDERS.forEach(provider => {
+        API_KEY_PROVIDERS.forEach((provider) => {
           const keyName = `${provider}_API_KEY`;
+
           if (apiKeys[keyName]) {
             consolidatedKeys[provider] = apiKeys[keyName];
             importedCount++;
@@ -185,37 +198,114 @@ export default function DataTab() {
         });
 
         if (importedCount > 0) {
-          // Store all API keys in a single cookie as JSON
+          // Stocker toutes les clés API dans un seul cookie au format JSON
           Cookies.set('apiKeys', JSON.stringify(consolidatedKeys));
 
-          // Also set individual cookies for backward compatibility
+          // Définir également des cookies individuels pour la rétrocompatibilité
           Object.entries(consolidatedKeys).forEach(([provider, key]) => {
             Cookies.set(`${provider}_API_KEY`, key);
           });
 
-          toast.success(`Successfully imported ${importedCount} API keys/URLs. Refreshing page to apply changes...`);
-          // Reload the page after a short delay to allow the toast to be seen
+          toast.success(`${importedCount} clé(s) API/URL importée(s) avec succès. Actualisation de la page pour appliquer les changements...`);
+
+          // Recharger la page après un court délai pour permettre de voir le toast
           setTimeout(() => {
             window.location.reload();
           }, 1500);
         } else {
-          toast.warn('No valid API keys found in the file');
+          toast.warn('Aucune clé API valide trouvée dans le fichier');
         }
 
-        // Set base URLs if they exist
-        ['OPENAI_LIKE_API_BASE_URL', 'LMSTUDIO_API_BASE_URL', 'OLLAMA_API_BASE_URL', 'TOGETHER_API_BASE_URL'].forEach(baseUrl => {
-          if (apiKeys[baseUrl]) {
-            Cookies.set(baseUrl, apiKeys[baseUrl]);
-          }
-        });
-
+        // Définir les URLs de base si elles existent
+        ['OPENAI_LIKE_API_BASE_URL', 'LMSTUDIO_API_BASE_URL', 'OLLAMA_API_BASE_URL', 'TOGETHER_API_BASE_URL'].forEach(
+          (baseUrl) => {
+            if (apiKeys[baseUrl]) {
+              Cookies.set(baseUrl, apiKeys[baseUrl]);
+            }
+          },
+        );
       } catch (error) {
-        toast.error('Failed to import API keys. Make sure the file is a valid JSON file.');
-        console.error('Failed to import API keys:', error);
+        toast.error('Échec de l\'importation des clés API. Assurez-vous que le fichier est un fichier JSON valide.');
+        console.error('Échec de l\'importation des clés API:', error);
       }
     };
     reader.readAsText(file);
     event.target.value = '';
+  };
+
+  const processChatData = (
+    data: any,
+  ): Array<{
+    id: string;
+    messages: Message[];
+    description: string;
+    urlId?: string;
+  }> => {
+    // Gérer le format standard Bolt (conversation unique)
+    if (data.messages && Array.isArray(data.messages)) {
+      const chatId = crypto.randomUUID();
+      return [
+        {
+          id: chatId,
+          messages: data.messages,
+          description: data.description || 'Conversation importée',
+          urlId: chatId,
+        },
+      ];
+    }
+
+    // Gérer le format d'exportation Bolt (conversations multiples)
+    if (data.chats && Array.isArray(data.chats)) {
+      return data.chats.map((chat: { id?: string; messages: Message[]; description?: string; urlId?: string }) => ({
+        id: chat.id || crypto.randomUUID(),
+        messages: chat.messages,
+        description: chat.description || 'Conversation importée',
+        urlId: chat.urlId,
+      }));
+    }
+
+    console.error('Aucun format correspondant trouvé pour:', data);
+    throw new Error('Format de conversation non supporté');
+  };
+
+  const handleImportChats = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+
+      if (!file || !db) {
+        toast.error('Une erreur est survenue');
+        return;
+      }
+
+      try {
+        const content = await file.text();
+        const data = JSON.parse(content);
+        const chatsToImport = processChatData(data);
+
+        for (const chat of chatsToImport) {
+          await setMessages(db, chat.id, chat.messages, chat.urlId, chat.description);
+        }
+
+        logStore.logSystem('Conversations importées avec succès', { count: chatsToImport.length });
+        toast.success(`${chatsToImport.length} conversation${chatsToImport.length > 1 ? 's' : ''} importée${chatsToImport.length > 1 ? 's' : ''} avec succès`);
+        window.location.reload();
+      } catch (error) {
+        if (error instanceof Error) {
+          logStore.logError('Échec de l\'importation des conversations:', error);
+          toast.error('Échec de l\'importation des conversations: ' + error.message);
+        } else {
+          toast.error('Échec de l\'importation des conversations');
+        }
+
+        console.error(error);
+      }
+    };
+
+    input.click();
   };
 
   return (
@@ -226,73 +316,67 @@ export default function DataTab() {
           <div className="flex flex-col gap-4">
             <div>
               <h4 className="text-bolt-elements-textPrimary mb-2">Historique des conversations</h4>
-              <p className="text-sm text-bolt-elements-textSecondary mb-4">
-                Exportez ou supprimez tout votre historique de conversations.
-              </p>
+              <p className="text-sm text-bolt-elements-textSecondary mb-4">Exportez ou supprimez tout votre historique de conversations.</p>
               <div className="flex gap-4">
                 <button
                   onClick={handleExportAllChats}
                   className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors"
                 >
-                  Exporter les conversations
+                  Exporter toutes les conversations
+                </button>
+                <button
+                  onClick={handleImportChats}
+                  className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors"
+                >
+                  Importer des conversations
                 </button>
                 <button
                   onClick={handleDeleteAllChats}
                   disabled={isDeleting}
                   className={classNames(
                     'px-4 py-2 bg-bolt-elements-button-danger-background hover:bg-bolt-elements-button-danger-backgroundHover text-bolt-elements-button-danger-text rounded-lg transition-colors',
-                    isDeleting ? 'opacity-50 cursor-not-allowed' : ''
+                    isDeleting ? 'opacity-50 cursor-not-allowed' : '',
                   )}
                 >
-                  {isDeleting ? 'Suppression...' : 'Supprimer les conversations'}
+                  {isDeleting ? 'Suppression...' : 'Supprimer toutes les conversations'}
                 </button>
               </div>
             </div>
 
             <div>
-              <h4 className="text-bolt-elements-textPrimary mb-2">Settings Backup</h4>
+              <h4 className="text-bolt-elements-textPrimary mb-2">Sauvegarde des paramètres</h4>
               <p className="text-sm text-bolt-elements-textSecondary mb-4">
-                Export your settings to a JSON file or import settings from a previously exported file.
+                Exportez vos paramètres dans un fichier JSON ou importez des paramètres depuis un fichier précédemment exporté.
               </p>
               <div className="flex gap-4">
                 <button
                   onClick={handleExportSettings}
                   className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors"
                 >
-                  Export Settings
+                  Exporter les paramètres
                 </button>
                 <label className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors cursor-pointer">
-                  Import Settings
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportSettings}
-                    className="hidden"
-                  />
+                  Importer les paramètres
+                  <input type="file" accept=".json" onChange={handleImportSettings} className="hidden" />
                 </label>
               </div>
             </div>
 
             <div>
-              <h4 className="text-bolt-elements-textPrimary mb-2">API Keys Management</h4>
+              <h4 className="text-bolt-elements-textPrimary mb-2">Gestion des clés API</h4>
               <p className="text-sm text-bolt-elements-textSecondary mb-4">
-                Import API keys from a JSON file or download a template to fill in your keys.
+                Importez des clés API depuis un fichier JSON ou téléchargez un modèle pour remplir vos clés.
               </p>
               <div className="flex gap-4">
                 <button
                   onClick={handleExportApiKeyTemplate}
                   className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors"
                 >
-                  Download Template
+                  Télécharger le modèle
                 </button>
                 <label className="px-4 py-2 bg-bolt-elements-button-primary-background hover:bg-bolt-elements-button-primary-backgroundHover text-bolt-elements-textPrimary rounded-lg transition-colors cursor-pointer">
-                  Import API Keys
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportApiKeys}
-                    className="hidden"
-                  />
+                  Importer les clés API
+                  <input type="file" accept=".json" onChange={handleImportApiKeys} className="hidden" />
                 </label>
               </div>
             </div>

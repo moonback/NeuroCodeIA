@@ -1,4 +1,4 @@
-const { execSync } =require('child_process');
+const { execSync } = require('child_process');
 
 // Get git hash with fallback
 const getGitHash = () => {
@@ -16,7 +16,7 @@ let commitJson = {
 
 console.log(`
 ★═══════════════════════════════════════★
-          B O L T . D I Y
+         N E U R O C O D E
          ⚡️  Welcome  ⚡️
 ★═══════════════════════════════════════★
 `);

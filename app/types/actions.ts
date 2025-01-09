@@ -26,4 +26,5 @@ export interface ActionAlert {
   title: string;
   description: string;
   content: string;
+  source?: 'terminal' | 'preview' | 'file_modification'; // Add source to differentiate between terminal, preview and file modification alerts
 }

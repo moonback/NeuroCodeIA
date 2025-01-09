@@ -22,6 +22,8 @@ import { useSettings } from '~/lib/hooks/useSettings';
 import type { ProviderInfo } from '~/types/model';
 import { useSearchParams } from '@remix-run/react';
 import { createSampler } from '~/utils/sampler';
+import { getTemplates, selectStarterTemplate } from '~/utils/selectStarterTemplate';
+import { fileModificationsToHTML } from '~/utils/diff';
 
 const toastAnimation = cssTransition({
   enter: 'animated fadeInRight',
@@ -35,7 +37,6 @@ export function Chat() {
 
   const { ready, initialMessages, storeMessageHistory, importChat, exportChat } = useChatHistory();
   const title = useStore(description);
-
   useEffect(() => {
     workbenchStore.setReloadedMessages(initialMessages.map((m) => m.id));
   }, [initialMessages]);
@@ -117,9 +118,10 @@ export const ChatImpl = memo(
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]); // Move here
     const [imageDataList, setImageDataList] = useState<string[]>([]); // Move here
     const [searchParams, setSearchParams] = useSearchParams();
+    const [fakeLoading, setFakeLoading] = useState(false);
     const files = useStore(workbenchStore.files);
     const actionAlert = useStore(workbenchStore.alert);
-    const { activeProviders, promptId } = useSettings();
+    const { activeProviders, promptId, autoSelectTemplate, contextOptimizationEnabled } = useSettings();
 
     const [model, setModel] = useState(() => {
       const savedModel = Cookies.get('selectedModel');
@@ -136,12 +138,13 @@ export const ChatImpl = memo(
 
     const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
 
-    const { messages, isLoading, input, handleInputChange, setInput, stop, append } = useChat({
+    const { messages, isLoading, input, handleInputChange, setInput, stop, append, setMessages, reload } = useChat({
       api: '/api/chat',
       body: {
         apiKeys,
         files,
         promptId,
+        contextOptimization: contextOptimizationEnabled,
       },
       sendExtraMessageFields: true,
       onError: (error) => {
@@ -166,7 +169,8 @@ export const ChatImpl = memo(
     });
     useEffect(() => {
       const prompt = searchParams.get('prompt');
-      console.log(prompt, searchParams, model, provider);
+
+      // console.log(prompt, searchParams, model, provider);
 
       if (prompt) {
         setSearchParams({});
@@ -266,7 +270,121 @@ export const ChatImpl = memo(
 
       runAnimation();
 
+      if (!chatStarted && messageInput && autoSelectTemplate) {
+        setFakeLoading(true);
+        setMessages([
+          {
+            id: `${new Date().getTime()}`,
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${_input}`,
+              },
+              ...imageDataList.map((imageData) => ({
+                type: 'image',
+                image: imageData,
+              })),
+            ] as any, // Type assertion to bypass compiler check
+          },
+        ]);
+
+        // reload();
+
+        const { template, title } = await selectStarterTemplate({
+          message: messageInput,
+          model,
+          provider,
+        });
+
+        if (template !== 'blank') {
+          const temResp = await getTemplates(template, title).catch((e) => {
+            if (e.message.includes('rate limit')) {
+              toast.warning('Rate limit exceeded. Skipping starter template\n Continuing with blank template');
+            } else {
+              toast.warning('Failed to import starter template\n Continuing with blank template');
+            }
+
+            return null;
+          });
+
+          if (temResp) {
+            const { assistantMessage, userMessage } = temResp;
+
+            setMessages([
+              {
+                id: `${new Date().getTime()}`,
+                role: 'user',
+                content: messageInput,
+
+                // annotations: ['hidden'],
+              },
+              {
+                id: `${new Date().getTime()}`,
+                role: 'assistant',
+                content: assistantMessage,
+              },
+              {
+                id: `${new Date().getTime()}`,
+                role: 'user',
+                content: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${userMessage}`,
+                annotations: ['hidden'],
+              },
+            ]);
+
+            reload();
+            setFakeLoading(false);
+
+            return;
+          } else {
+            setMessages([
+              {
+                id: `${new Date().getTime()}`,
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${_input}`,
+                  },
+                  ...imageDataList.map((imageData) => ({
+                    type: 'image',
+                    image: imageData,
+                  })),
+                ] as any, // Type assertion to bypass compiler check
+              },
+            ]);
+            reload();
+            setFakeLoading(false);
+
+            return;
+          }
+        } else {
+          setMessages([
+            {
+              id: `${new Date().getTime()}`,
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${_input}`,
+                },
+                ...imageDataList.map((imageData) => ({
+                  type: 'image',
+                  image: imageData,
+                })),
+              ] as any, // Type assertion to bypass compiler check
+            },
+          ]);
+          reload();
+          setFakeLoading(false);
+
+          return;
+        }
+      }
+
       if (fileModifications !== undefined) {
+        const diff = fileModificationsToHTML(fileModifications);
+
         /**
          * If we have file modifications we append a new user message manually since we have to prefix
          * the user input with the file modifications and we don't want the new user input to appear
@@ -279,7 +397,7 @@ export const ChatImpl = memo(
           content: [
             {
               type: 'text',
-              text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${_input}`,
+              text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${diff}\n\n${_input}`,
             },
             ...imageDataList.map((imageData) => ({
               type: 'image',
@@ -368,7 +486,7 @@ export const ChatImpl = memo(
         input={input}
         showChat={showChat}
         chatStarted={chatStarted}
-        isStreaming={isLoading}
+        isStreaming={isLoading || fakeLoading}
         enhancingPrompt={enhancingPrompt}
         promptEnhanced={promptEnhanced}
         sendMessage={sendMessage}
@@ -415,6 +533,7 @@ export const ChatImpl = memo(
         setImageDataList={setImageDataList}
         actionAlert={actionAlert}
         clearAlert={() => workbenchStore.clearAlert()}
+        files={files}
       />
     );
   },

@@ -31,12 +31,12 @@ export const createChatFromFolder = async (
 
   const binaryFilesMessage =
     binaryFiles.length > 0
-      ? `\n\nSkipped ${binaryFiles.length} binary files:\n${binaryFiles.map((f) => `- ${f}`).join('\n')}`
+      ? `\n\nFichiers binaires ignorés : ${binaryFiles.length}\n${binaryFiles.map((f) => `- ${f}`).join('\n')}`
       : '';
 
   const filesMessage: Message = {
     role: 'assistant',
-    content: `I've imported the contents of the "${folderName}" folder.${binaryFilesMessage}
+    content: `J'ai importé le contenu du dossier "${folderName}".${binaryFilesMessage}
 
 <boltArtifact id="imported-files" title="Imported Files">
 ${fileArtifacts
@@ -54,7 +54,7 @@ ${file.content}
   const userMessage: Message = {
     role: 'user',
     id: generateId(),
-    content: `Import the "${folderName}" folder`,
+    content: `Importer le dossier "${folderName}"`,
     createdAt: new Date(),
   };
 

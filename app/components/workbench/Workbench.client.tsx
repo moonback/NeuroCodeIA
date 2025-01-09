@@ -153,11 +153,11 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                       }}
                     >
                       <div className="i-ph:code" />
-                      Télécharger le code
+                      Télécharger le Code
                     </PanelHeaderButton>
                     <PanelHeaderButton className="mr-1 text-sm" onClick={handleSyncFiles} disabled={isSyncing}>
                       {isSyncing ? <div className="i-ph:spinner" /> : <div className="i-ph:cloud-arrow-down" />}
-                      {isSyncing ? 'Synchronisation...' : 'Synchroniser les fichiers'}
+                      {isSyncing ? 'Synchronisation...' : 'Synchroniser les Fichiers'}
                     </PanelHeaderButton>
                     <PanelHeaderButton
                       className="mr-1 text-sm"
@@ -166,7 +166,7 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                       }}
                     >
                       <div className="i-ph:terminal" />
-                      Basculer le terminal
+                      Basculer Terminal
                     </PanelHeaderButton>
                     <PanelHeaderButton
                       className="mr-1 text-sm"
@@ -185,11 +185,11 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
                         const githubToken = Cookies.get('githubToken');
 
                         if (!githubUsername || !githubToken) {
-                          const usernameInput = prompt("Veuillez entrer votre nom d'utilisateur GitHub :");
-                          const tokenInput = prompt("Veuillez entrer votre jeton d'accès personnel GitHub :");
+                          const usernameInput = prompt('Veuillez entrer votre nom d\'utilisateur GitHub :');
+                          const tokenInput = prompt('Veuillez entrer votre jeton d\'accès personnel GitHub :');
 
                           if (!usernameInput || !tokenInput) {
-                            alert("Le nom d'utilisateur et le jeton GitHub sont requis. Envoi vers GitHub annulé.");
+                            alert('Le nom d\'utilisateur et le jeton GitHub sont requis. Envoi vers GitHub annulé.');
                             return;
                           }
 

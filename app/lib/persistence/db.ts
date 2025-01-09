@@ -12,25 +12,64 @@ export async function openDatabase(): Promise<IDBDatabase | undefined> {
   }
 
   return new Promise((resolve) => {
-    const request = indexedDB.open('boltHistory', 1);
-
-    request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+    // First try to get the current version
+    const checkRequest = indexedDB.open('boltHistory');
+    
+    checkRequest.onsuccess = (event: Event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      const currentVersion = db.version;
+      db.close();
 
-      if (!db.objectStoreNames.contains('chats')) {
-        const store = db.createObjectStore('chats', { keyPath: 'id' });
-        store.createIndex('id', 'id', { unique: true });
-        store.createIndex('urlId', 'urlId', { unique: true });
-      }
+      // Now open with the correct version
+      const request = indexedDB.open('boltHistory', currentVersion);
+
+      request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+
+        if (!db.objectStoreNames.contains('chats')) {
+          const store = db.createObjectStore('chats', { keyPath: 'id' });
+          store.createIndex('id', 'id', { unique: true });
+          store.createIndex('urlId', 'urlId', { unique: true });
+        }
+      };
+
+      request.onsuccess = (event: Event) => {
+        resolve((event.target as IDBOpenDBRequest).result);
+      };
+
+      request.onerror = (event: Event) => {
+        const error = (event.target as IDBOpenDBRequest).error;
+        logger.error('Failed to open database:', error);
+        // Try to recover by deleting and recreating the database
+        if (error?.name === 'VersionError') {
+          indexedDB.deleteDatabase('boltHistory').onsuccess = () => {
+            const recoveryRequest = indexedDB.open('boltHistory', 1);
+            
+            recoveryRequest.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+              const db = (event.target as IDBOpenDBRequest).result;
+              const store = db.createObjectStore('chats', { keyPath: 'id' });
+              store.createIndex('id', 'id', { unique: true });
+              store.createIndex('urlId', 'urlId', { unique: true });
+            };
+
+            recoveryRequest.onsuccess = (event: Event) => {
+              resolve((event.target as IDBOpenDBRequest).result);
+            };
+
+            recoveryRequest.onerror = () => {
+              logger.error('Failed to recover database');
+              resolve(undefined);
+            };
+          };
+        } else {
+          resolve(undefined);
+        }
+      };
     };
 
-    request.onsuccess = (event: Event) => {
-      resolve((event.target as IDBOpenDBRequest).result);
-    };
-
-    request.onerror = (event: Event) => {
+    checkRequest.onerror = () => {
+      logger.error('Failed to check database version');
       resolve(undefined);
-      logger.error((event.target as IDBOpenDBRequest).error);
     };
   });
 }
@@ -54,25 +93,52 @@ export async function setMessages(
   description?: string,
   timestamp?: string,
 ): Promise<void> {
+  if (timestamp && isNaN(Date.parse(timestamp))) {
+    throw new Error('Invalid timestamp');
+  }
+
+  // Obtenir l'urlId avant de démarrer la transaction
+  const finalUrlId = urlId || await getUrlId(db, id);
+  
   return new Promise((resolve, reject) => {
     const transaction = db.transaction('chats', 'readwrite');
     const store = transaction.objectStore('chats');
 
-    if (timestamp && isNaN(Date.parse(timestamp))) {
-      reject(new Error('Invalid timestamp'));
-      return;
-    }
-
     const request = store.put({
       id,
       messages,
-      urlId,
+      urlId: finalUrlId,
       description,
       timestamp: timestamp ?? new Date().toISOString(),
     });
 
     request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    request.onerror = async () => {
+      // Si l'erreur est due à un urlId en double, on réessaie avec un nouveau urlId
+      if (request.error?.name === 'ConstraintError') {
+        try {
+          const newUrlId = await getUrlId(db, `${finalUrlId}-${Date.now()}`);
+          // Créer une nouvelle transaction car la précédente est terminée
+          const newTransaction = db.transaction('chats', 'readwrite');
+          const newStore = newTransaction.objectStore('chats');
+          
+          const retryRequest = newStore.put({
+            id,
+            messages,
+            urlId: newUrlId,
+            description,
+            timestamp: timestamp ?? new Date().toISOString(),
+          });
+
+          retryRequest.onsuccess = () => resolve();
+          retryRequest.onerror = () => reject(retryRequest.error);
+        } catch (error) {
+          reject(error);
+        }
+      } else {
+        reject(request.error);
+      }
+    };
   });
 }
 
@@ -130,18 +196,36 @@ export async function getNextId(db: IDBDatabase): Promise<string> {
 }
 
 export async function getUrlId(db: IDBDatabase, id: string): Promise<string> {
-  const idList = await getUrlIds(db);
+  if (!id) {
+    // Générer un ID aléatoire si aucun ID n'est fourni
+    return `chat-${Math.random().toString(36).substring(2, 15)}`;
+  }
 
-  if (!idList.includes(id)) {
-    return id;
+  const idList = await getUrlIds(db);
+  
+  // Nettoyer l'ID pour éviter les caractères problématiques
+  const cleanId = id.replace(/[^a-zA-Z0-9-_]/g, '-');
+  
+  if (!idList.includes(cleanId)) {
+    return cleanId;
   } else {
     let i = 2;
-
-    while (idList.includes(`${id}-${i}`)) {
+    let newId = `${cleanId}-${i}`;
+    
+    // Utiliser un Set pour une recherche plus efficace
+    const idSet = new Set(idList);
+    
+    while (idSet.has(newId)) {
       i++;
+      newId = `${cleanId}-${i}`;
+      
+      // Éviter une boucle infinie
+      if (i > 1000) {
+        return `${cleanId}-${Date.now()}`;
+      }
     }
-
-    return `${id}-${i}`;
+    
+    return newId;
   }
 }
 
@@ -157,7 +241,10 @@ async function getUrlIds(db: IDBDatabase): Promise<string[]> {
       const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
 
       if (cursor) {
-        idList.push(cursor.value.urlId);
+        // Ne pas ajouter les urlId undefined ou null
+        if (cursor.value.urlId) {
+          idList.push(cursor.value.urlId);
+        }
         cursor.continue();
       } else {
         resolve(idList);

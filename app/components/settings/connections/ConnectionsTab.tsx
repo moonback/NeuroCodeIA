@@ -92,10 +92,10 @@ export default function ConnectionsTab() {
 
   return (
     <div className="p-4 mb-4 border border-bolt-elements-borderColor rounded-lg bg-bolt-elements-background-depth-3">
-      <h3 className="text-lg font-medium text-bolt-elements-textPrimary mb-4">Connexion GitHub</h3>
+      <h3 className="text-lg font-medium text-bolt-elements-textPrimary mb-4">GitHub Connection</h3>
       <div className="flex mb-4">
         <div className="flex-1 mr-2">
-          <label className="block text-sm text-bolt-elements-textSecondary mb-1">Nom d'utilisateur GitHub :</label>
+          <label className="block text-sm text-bolt-elements-textSecondary mb-1">GitHub Username:</label>
           <input
             type="text"
             value={githubUsername}
@@ -105,7 +105,7 @@ export default function ConnectionsTab() {
           />
         </div>
         <div className="flex-1">
-          <label className="block text-sm text-bolt-elements-textSecondary mb-1">Jeton d'accès personnel :</label>
+          <label className="block text-sm text-bolt-elements-textSecondary mb-1">Personal Access Token:</label>
           <input
             type="password"
             value={githubToken}
@@ -125,10 +125,10 @@ export default function ConnectionsTab() {
             {isVerifying ? (
               <>
                 <div className="i-ph:spinner animate-spin mr-2" />
-                Vérification...
+                Verifying...
               </>
             ) : (
-              'Connecter'
+              'Connect'
             )}
           </button>
         ) : (
@@ -136,13 +136,13 @@ export default function ConnectionsTab() {
             onClick={handleDisconnect}
             className="bg-bolt-elements-button-danger-background rounded-lg px-4 py-2 mr-2 transition-colors duration-200 hover:bg-bolt-elements-button-danger-backgroundHover text-bolt-elements-button-danger-text"
           >
-            Déconnecter
+            Disconnect
           </button>
         )}
         {isConnected && (
           <span className="text-sm text-green-600 flex items-center">
             <div className="i-ph:check-circle mr-1" />
-            Connecté à GitHub
+            Connected to GitHub
           </span>
         )}
       </div>

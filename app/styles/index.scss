@@ -7,6 +7,15 @@
 @use 'components/editor.scss';
 @use 'components/toast.scss';
 
+/* Cacher toutes les barres de défilement */
+* {
+  scrollbar-width: none; /* Pour Firefox */
+  -ms-overflow-style: none; /* Pour Internet Explorer et Edge */
+  &::-webkit-scrollbar {
+    display: none; /* Pour Chrome, Safari et Opera */
+  }
+}
+
 html,
 body {
   height: 100%;
@@ -21,37 +30,4 @@ body {
   // --primary-color: rgba(147, 112, 219, var(--gradient-opacity));
   // --secondary-color: rgba(138, 43, 226, var(--gradient-opacity));
   // --accent-color: rgba(180, 170, 220, var(--gradient-opacity));
-}
-
-/* Styles personnalisés pour les barres de défilement */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--bolt-elements-item-contentDefault) transparent;
-}
-
-/* Pour les navigateurs WebKit (Chrome, Safari, etc.) */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: var(--bolt-elements-item-contentDefault);
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--bolt-elements-item-contentActive);
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-corner {
-  background: transparent;
 }
