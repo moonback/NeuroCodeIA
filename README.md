@@ -57,7 +57,8 @@ Consultez la [documentation Neurocode](https://stackblitz-labs.github.io/bolt.di
 - ✅ Systeme appel d'un fichier via le chat avec @
 - ✅ modification manuel des fichier enrengistrer
 - ✅ Amelioration du design
-- ✅ Mise a jours des provider et model  
+- ✅ Mise a jours des provider et model
+- ✅ Ajoutes d'un prompt optimiser et un prompt Minimal 
 - ⬜ **HAUTE PRIORITÉ** - Éviter la réécriture fréquente des fichiers  
 - ⬜ **HAUTE PRIORITÉ** - Optimisation des prompts pour les petits modèles  
 - ⬜ **HAUTE PRIORITÉ** - Exécution des agents en backend  
