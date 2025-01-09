@@ -1,6 +1,5 @@
 # Neurocode
 
-![Neurocode : Développement Web Full-Stack propulsé par l'IA dans le navigateur](./public/social_preview_index.jpg)
 
 Bienvenue sur **Neurocode**, la version open source officielle de Neurocode, permettant de choisir le modèle d'IA (LLM) utilisé pour chaque prompt ! Actuellement, Neurocode prend en charge OpenAI, Anthropic, Ollama, OpenRouter, Gemini, LMStudio, Mistral, xAI, HuggingFace, DeepSeek, et Groq, avec la possibilité d'ajouter facilement d'autres modèles grâce au Vercel AI SDK. Consultez les instructions ci-dessous pour exécuter l'application localement et ajouter des modèles supplémentaires.
 
